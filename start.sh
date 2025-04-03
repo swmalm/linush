@@ -19,8 +19,10 @@ for line in $art; do
     sleep 0.2
 done
 
-grn='\e[0;32m'
-blu='\e[0;34m'
-wht='\e[0;37m'
+green='\e[0;32m'
+blue='\e[0;34m'
+white='\e[0;37m'
 red='\e[0;31m'
-yel='\e[1;33m'
+yellow='\e[1;33m'
+
+read -rp "Press any key to continue..."
