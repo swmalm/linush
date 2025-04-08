@@ -1,7 +1,6 @@
 #!/bin/sh
 
-#thinking of like check before installing that explains shit
-#also having like a "here's how you can do it manually if the config is different on your pc"
+# Future Feature: "here's how you can do it manually if the config is different on your pc"
 
 art="
 ┏┓┓┏┏┓┏┳┓┏┓┳┳┓  ┳┳┓┏┓┳┓┏┓┏┓┏┓┳┓  ┏  ┓ ┏┓ ┏┓┏┓┓
@@ -390,5 +389,3 @@ while true; do
 esac
 
 done
-
-
