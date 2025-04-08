@@ -274,7 +274,7 @@ while true; do
 		read -rp "Selection > " fed_select;
     	case $fed_select in
 		"rpm")
-			echo "RPM Fusion is a repository with non-free software like propriatery nvidia drivers."
+			echo "RPM Fusion is a repository with non-free software like proprietary nvidia drivers."
 			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
@@ -282,7 +282,7 @@ while true; do
 				sudo dnf update @core
 			;;
 		"nvi")
-			echo "For best performance on Linux, it's best to use the propriatery nvidia driver."
+			echo "For best performance on Linux, it's best to use the proprietary nvidia driver."
 			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r # One letter only
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
