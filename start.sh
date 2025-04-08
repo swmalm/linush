@@ -29,7 +29,7 @@ read -rp "Press any key to continue..."
 
 print_help(){
 	echo -e "${blue}**************************************${white}"
-	echo "       SYSTEM MANAGER (v0.1-rewrite)          "
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
 	echo -e "${blue}--------------------------------------${white}"
 	echo ""
 	echo -e "${green}NETWORK${white}"
@@ -56,15 +56,58 @@ print_help(){
 	echo -e "${red}fm${white} - Modify folder properties"
 	echo -e "${red}fd${white} - Delete a folder"
 	echo ""
-	echo -e "${green}OTHER${white}"
+	echo -e "${green}PACKAGES${white}"
 	echo -e "${red}pkg${white} - Install, Update or Remove packages"
+	echo -e "${red}fast${white} - Fastfetch"
+	echo -e "${red}star${white} - Starship"
+	echo -e ""
+	echo -e "${green}DISTROS${white}"
+	echo -e "${red}fed${white} - Fedora-based"
+	echo -e "${red}arch${white} - Arch-based"
+	echo -e "${red}deb${white} - Debian-based"
+
+
 	echo -e ""
 	echo -e "${yellow}ex${white} - Exit the program"
 }
 
+fedora(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+
+	echo -e "${green}FEDORA${white}"
+	echo -e "${red}rpm${white} - RPM Fusion"
+	echo -e "${red}vir${white} - Virtualization"
+	echo -e "${red}upt${white} - Full System Upgrade"
+	echo -e "${red}rpm${white} - Nvidia Driver"
+}
+
+debian(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+
+	echo -e "${green}DEBIAN${white}"
+	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}vir${white} - Virtualization"
+	echo -e "${red}upt${white} - Full System Upgrade"
+}
+
+arch(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+
+	echo -e "${green}ARCH${white}"
+	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}upt${white} - Full System Upgrade"
+	echo -e "${red}vir${white} - Virtualization"
+}
+
 sysman_logo(){
 	echo -e "${blue}**************************************${white}"
-	echo "       SYSTEM MANAGER (v0.1-rewrite)          "
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
 	echo -e "${blue}--------------------------------------${white}"
 }
 
@@ -182,6 +225,35 @@ while true; do
 
 	"pkg")
 		clear
+		read -rp "Press enter to continue..."
+		;;
+
+	"fast")
+		clear
+		read -rp "Press enter to continue..."
+		;;
+
+	"star")
+		clear
+		curl -sS https://starship.rs/install.sh | sh
+		read -rp "Press enter to continue..."
+		;;
+	
+	"fed")
+		clear
+		fedora
+		read -rp "Press enter to continue..."
+		;;
+
+	"deb")
+		clear
+		debian
+		read -rp "Press enter to continue..."
+		;;
+
+	"arch")
+		clear
+		arch
 		read -rp "Press enter to continue..."
 		;;
 
