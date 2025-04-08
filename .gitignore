@@ -1,9 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 .env
 .vscode
 .DS_store
 *.log
 =======
+=======
+>>>>>>> refs/remotes/origin/main
 .vscode
 # temporary files which can be created if a process still has a handle open of a deleted file
 .fuse_hidden*
@@ -18,5 +21,9 @@
 .nfs*
 
 # Log files created by default by the nohup command
+<<<<<<< HEAD
 nohup.out
 >>>>>>> 256d891 (added gitignore)
+=======
+nohup.out
+>>>>>>> refs/remotes/origin/main
