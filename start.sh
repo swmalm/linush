@@ -297,6 +297,35 @@ while true; do
 		read -rp "Press enter to continue..."
 		;;
 
+	"fast")
+		clear
+		read -rp "Press enter to continue..."
+		;;
+
+	"star")
+		clear
+		curl -sS https://starship.rs/install.sh | sh
+		read -rp "Press enter to continue..."
+		;;
+	
+	"fed")
+		clear
+		fedora
+		read -rp "Press enter to continue..."
+		;;
+
+	"deb")
+		clear
+		debian
+		read -rp "Press enter to continue..."
+		;;
+
+	"arch")
+		clear
+		arch
+		read -rp "Press enter to continue..."
+		;;
+
 	# If the selection is invalid
 	*)
         echo "ERROR... [Invalid Selection: '$selection']"
