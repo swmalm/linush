@@ -192,4 +192,4 @@ while true; do
 		read -rp "Press enter to continue..."
         ;;		
 esac
-done # for when switch case is done
+done # for when switch case is done a
