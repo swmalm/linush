@@ -1,0 +1,3 @@
+[main]
+max_parallel_downloads=10
+fastestmirror=true

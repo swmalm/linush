@@ -51,7 +51,7 @@ packageToInstall(){
 	fi
 }
 
-read -rp "Press any key to continue..."
+read -rp "Welcome to Linush! Press enter to continue..."
 
 print_help(){
 	echo -e "${blue}**************************************${white}"
@@ -275,11 +275,66 @@ while true; do
 		read -rp "Selection > " fed_select;
     	case $fed_select in
 		"rpm")
-			sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-			sudo dnf update @core
+			echo "RPM Fusion is a repository with non-free software like propriatery nvidia drivers."
+			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+				sudo dnf update @core
 			;;
 		"nvi")
-			sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+			echo "For best performance on Linux, it's best to use the propriatery nvidia driver."
+			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r # One letter only
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+				if dnf repolist | grep rpmfusion-nonfree; then
+					dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+				else
+					echo "ERROR: RPMFUSION NOT FOUND!"
+			;;
+		"zram")
+			echo "ZRAM is a modern implementation of the swapfile."
+			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r # One letter only
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+				read -rp "Type size in GB for zram (Half of your RAM is a good place to start): " zram_size;
+				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
+					sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
+				else
+					echo "ERROR: INVALID INTEGER!"
+				fi
+			fi
+			;;
+		"vmax")
+			echo -e "vm.max_map_count is the virtual memory limit on your machine, \nincreasing it can help with performance in games like Star Citizen."
+			echo ""
+			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r # One letter only
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+				sysctl -w vm.max_map_count=16777216
+			fi
+			;;
+		"dnf")
+			echo ""
+			echo -e "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\nAdding more capacity and allowing fastest mirror can speed up package handling."
+			echo ""
+			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r # One letter only
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
+    				sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
+				else
+    				echo -e "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+				fi
+
+				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
+    				sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
+				else
+    				echo -e "fastestmirror=true" >> /etc/dnf/dnf.conf
+				fi
+				echo -e "Increased max_parallel_download to 10 and set fastestmirror to true."
+				echo ""
+			fi
 			;;
 		esac
 		read -rp "Press enter to continue..."
