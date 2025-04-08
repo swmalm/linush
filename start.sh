@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#thinking of like check before installing that explains shit
+#also having like a "here's how you can do it manually if the config is different on your pc"
+
 art="
 ┏┓┓┏┏┓┏┳┓┏┓┳┳┓  ┳┳┓┏┓┳┓┏┓┏┓┏┓┳┓  ┏  ┓ ┏┓ ┏┓┏┓┓
 ┗┓┗┫┗┓ ┃ ┣ ┃┃┃  ┃┃┃┣┫┃┃┣┫┃┓┣ ┣┫  ┃┓┏┃ ┃┫ ┣┓┗┫┃
@@ -25,11 +28,34 @@ white='\e[0;37m'
 red='\e[0;31m'
 yellow='\e[1;33m'
 
+packageToInstall(){
+	packagesNeeded="$1"
+	if [ -x "$(command -v apt-get)" ];
+	then
+		sudo apt-get install "${packagesNeeded[@]}"
+
+	elif [ -x "$(command -v dnf)" ];
+	then
+		sudo dnf install "${packagesNeeded[@]}"
+
+	elif [ -x "$(command -v zypper)" ];
+	then
+		sudo zypper install "${packagesNeeded[@]}"
+
+	elif [ -x "$(command -v pacman)" ];
+	then
+		sudo pacman -S "${packagesNeeded[@]}"
+
+	else
+		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
+	fi
+}
+
 read -rp "Press any key to continue..."
 
 print_help(){
 	echo -e "${blue}**************************************${white}"
-	echo "       SYSTEM MANAGER (v0.1-rewrite)          "
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
 	echo -e "${blue}--------------------------------------${white}"
 	echo ""
 	echo -e "${green}NETWORK${white}"
@@ -56,15 +82,59 @@ print_help(){
 	echo -e "${red}fm${white} - Modify folder properties"
 	echo -e "${red}fd${white} - Delete a folder"
 	echo ""
-	echo -e "${green}OTHER${white}"
+	echo -e "${green}PACKAGES${white}"
 	echo -e "${red}pkg${white} - Install, Update or Remove packages"
+	echo -e "${red}fast${white} - Fastfetch"
+	echo -e "${red}star${white} - Starship"
+	echo -e ""
+	echo -e "${green}DISTROS${white}"
+	echo -e "${red}fed${white} - Fedora-based"
+	echo -e "${red}arch${white} - Arch-based"
+	echo -e "${red}deb${white} - Debian-based"
 	echo -e ""
 	echo -e "${yellow}ex${white} - Exit the program"
 }
 
+fedora(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+	echo -e "${green}FEDORA${white}"
+	echo -e ""
+	echo -e "${red}rpm${white} - RPM Fusion"
+	echo -e "${red}dnf${white} - DNF Config"
+	echo -e "${red}zram${white} - Edit zram swap size"
+	echo -e "${red}vmax${white} - Increase vm.max_map_count"
+	echo -e "${red}vir${white} - Virtualization"
+	echo -e "${red}upg${white} - Full System Upgrade"
+	echo -e "${red}nvi${white} - Install NVIDIA Driver and CUDA"
+}
+
+debian(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+	echo -e ""
+	echo -e "${green}DEBIAN${white}"
+	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}vir${white} - Virtualization"
+	echo -e "${red}upt${white} - Full System Upgrade"
+}
+
+arch(){
+	echo -e "${blue}**************************************${white}"
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
+	echo -e "${blue}--------------------------------------${white}"
+	echo -e ""
+	echo -e "${green}ARCH${white}"
+	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}upt${white} - Full System Upgrade"
+	echo -e "${red}vir${white} - Virtualization"
+}
+
 sysman_logo(){
 	echo -e "${blue}**************************************${white}"
-	echo "       SYSTEM MANAGER (v0.1-rewrite)          "
+	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
 	echo -e "${blue}--------------------------------------${white}"
 }
 
@@ -182,6 +252,77 @@ while true; do
 
 	"pkg")
 		clear
+		read -rp "Package to install: " pkg_select;
+		packageToInstall "$pkg_select"
+		read -rp "Press enter to continue..."
+		;;
+
+	"fast")
+		clear
+		packageToInstall "fastfetch"
+		read -rp "Press enter to continue..."
+		;;
+
+	"star")
+		clear
+		curl -sS https://starship.rs/install.sh | sh
+		read -rp "Press enter to continue..."
+		;;
+	
+	"fed")
+		clear
+		fedora
+		read -rp "Selection > " fed_select;
+    	case $fed_select in
+		"rpm")
+			sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+			sudo dnf update @core
+			;;
+		"nvi")
+			sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+			;;
+		esac
+		read -rp "Press enter to continue..."
+		;;
+
+	"deb")
+		clear
+		debian
+		read -rp "Press enter to continue..."
+		;;
+
+	"arch")
+		clear
+		arch
+		read -rp "Press enter to continue..."
+		;;
+
+	"fast")
+		clear
+		read -rp "Press enter to continue..."
+		;;
+
+	"star")
+		clear
+		curl -sS https://starship.rs/install.sh | sh
+		read -rp "Press enter to continue..."
+		;;
+	
+	"fed")
+		clear
+		fedora
+		read -rp "Press enter to continue..."
+		;;
+
+	"deb")
+		clear
+		debian
+		read -rp "Press enter to continue..."
+		;;
+
+	"arch")
+		clear
+		arch
 		read -rp "Press enter to continue..."
 		;;
 
@@ -192,4 +333,7 @@ while true; do
 		read -rp "Press enter to continue..."
         ;;		
 esac
-done # for when switch case is done a
+
+done
+
+
