@@ -141,6 +141,7 @@ while true; do
 	# Add/Remove user from group
 	"gm")
 		clear
+		read -rp "Press enter to continue..."
 		;;
 	
 	# Delete group
@@ -163,11 +164,13 @@ while true; do
 
 	# View folder properties
 	"fv")
+		clear
 		read -rp "Press enter to continue..."
 		;;
 
 	# Modify folder properties
 	"fm")
+		clear
 		read -rp "Press enter to continue..."
 		;;
 		
@@ -179,6 +182,7 @@ while true; do
 
 	"pkg")
 		clear
+		read -rp "Press enter to continue..."
 		;;
 
 	# If the selection is invalid
