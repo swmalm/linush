@@ -295,7 +295,7 @@ while true; do
 		clear
 		echo -e "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\nthere are certain packages that are recommended to have installed."
 		echo -e ""
-		echo -e "Packages that will be installed:\nSteam: Binary version\nSteam-devices: Adds permissions for steam to use certain hardware for things like VR"
+		echo -e "Packages that will be installed:\nSteam: Binary version"
 		echo -e "Gamescope: Valve's window manager that can improve support for some games and features like HDR\nMangoHud: FPS counter and hardware monitoring software"
 		echo -e "Goverlay: MangoHud configuration tool\nLutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc."
 		echo -e "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming"
@@ -304,10 +304,12 @@ while true; do
 		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		echo ""
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			packageToInstall "steam steam-devices gamescope mangohud goverlay lutris"
+			pkgs = "steam gamescope mangohud goverlay lutris"
+			packageToInstall "$pkgs"
 			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o ~/AppImages/heroic_games_launcher.appimage
 			flatpak install it.mijorus.gearlever -y
 			flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
+			read -rp "Press enter to continue..."
 		else
 			echo ""
 		fi
