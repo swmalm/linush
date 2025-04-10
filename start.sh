@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Future Feature: "here's how you can do it manually if the config is different on your pc"
+# Future Features: "here's how you can do it manually if the config is different on your pc", "multiple options for parts of commands like only installing steam and not gamescope"
 
 art="
 ┏┓┓┏┏┓┏┳┓┏┓┳┳┓  ┳┳┓┏┓┳┓┏┓┏┓┏┓┳┓  ┏  ┓ ┏┓ ┏┓┏┓┓
@@ -9,10 +9,24 @@ art="
 "
 clear
 
-if [ "$EUID" -ne 0 ]; then
-	echo "Please run the script with sudo!"
+if [ "$EUID" == 0 ]; then
+	echo "Please don't run the script with sudo!"
 	read -rp "Press any key to exit..."
 	exit
+fi
+
+if [[ $(uname -r) == *"nobara"* ]]; then
+	echo -e "Nobara uses custom kernels, configs and packages that makes it incompatible with this script.\nTweaks included in Linush are already set by default."
+	echo ""
+	read -ep "Do you still want to continue? (y/n) > " -n 1 -r
+	echo ""
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		clear
+		echo "Good Luck!"
+	else
+		read -rp "Press any key to exit..."
+		exit
+	fi
 fi
 
 IFS=$'\n'
@@ -28,25 +42,16 @@ red='\e[0;31m'
 yellow='\e[1;33m'
 
 packageToInstall(){
-	packagesNeeded="$1"
-	if [ -x "$(command -v apt-get)" ];
-	then
-		sudo apt-get install "${packagesNeeded[@]}"
-
-	elif [ -x "$(command -v dnf)" ];
-	then
-		sudo dnf install "${packagesNeeded[@]}"
-
-	elif [ -x "$(command -v zypper)" ];
-	then
-		sudo zypper install "${packagesNeeded[@]}"
-
-	elif [ -x "$(command -v pacman)" ];
-	then
-		sudo pacman -S "${packagesNeeded[@]}"
-
+	if [ -x "$(command -v apt-get)" ];then
+		sudo apt-get install -y $@
+	elif [ -x "$(command -v dnf)" ];then
+		sudo dnf install -y $@
+	elif [ -x "$(command -v zypper)" ];then
+		sudo zypper install -y $@
+	elif [ -x "$(command -v pacman)" ];then
+		sudo pacman -S --noconfirm $@
 	else
-		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
+		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
 	fi
 }
 
@@ -85,11 +90,16 @@ print_help(){
 	echo -e "${red}pkg${white} - Install, Update or Remove packages"
 	echo -e "${red}fast${white} - Fastfetch"
 	echo -e "${red}star${white} - Starship"
+	echo -e "${red}game${white} - Gaming Essentials"
 	echo -e ""
-	echo -e "${green}DISTROS${white}"
+	echo -e "${green}DISTRO SPECIFIC${white}"
 	echo -e "${red}fed${white} - Fedora-based"
 	echo -e "${red}arch${white} - Arch-based"
 	echo -e "${red}deb${white} - Debian-based"
+	echo -e ""	
+	echo -e "${green}SYSTEM${white}"
+	echo -e "${red}firm${white} - Firmware"
+	echo -e "${red}flat${white} - Flatpak"
 	echo -e ""
 	echo -e "${yellow}ex${white} - Exit the program"
 }
@@ -115,7 +125,7 @@ debian(){
 	echo -e "${blue}--------------------------------------${white}"
 	echo -e ""
 	echo -e "${green}DEBIAN${white}"
-	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}nvi${white} - Nvidia Driver"
 	echo -e "${red}vir${white} - Virtualization"
 	echo -e "${red}upt${white} - Full System Upgrade"
 }
@@ -126,7 +136,7 @@ arch(){
 	echo -e "${blue}--------------------------------------${white}"
 	echo -e ""
 	echo -e "${green}ARCH${white}"
-	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}nvi${white} - Nvidia Driver"
 	echo -e "${red}upt${white} - Full System Upgrade"
 	echo -e "${red}vir${white} - Virtualization"
 }
@@ -252,13 +262,13 @@ while true; do
 	"pkg")
 		clear
 		read -rp "Package to install: " pkg_select;
-		packageToInstall "$pkg_select"
+		packageToInstall $pkg_select
 		read -rp "Press enter to continue..."
 		;;
 
 	"fast")
 		clear
-		packageToInstall "fastfetch"
+		packageToInstall fastfetch
 		read -rp "Press enter to continue..."
 		;;
 
@@ -266,6 +276,35 @@ while true; do
 		clear
 		curl -sS https://starship.rs/install.sh | sh
 		read -rp "Press enter to continue..."
+		;;
+
+	"flat")
+		clear
+		;;
+
+	"game")
+		clear
+		echo -e "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\nthere are certain packages that are recommended to have installed."
+		echo -e ""
+		echo -e "Packages that will be installed:\nSteam: Binary version"
+		echo -e "Gamescope: Valve's window manager that can improve support for some games and features like HDR\nMangoHud: FPS counter and hardware monitoring software"
+		echo -e "Goverlay: MangoHud configuration tool\nLutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc."
+		echo -e "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming"
+		echo -e "Gear Lever: Utility for handling .appimages like Heroic Games Launcher"
+		echo ""
+		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
+		echo ""
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			packageToInstall steam gamescope mangohud goverlay lutris
+			mkdir -p "$HOME/AppImages"
+			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
+			sudo flatpak install it.mijorus.gearlever -y
+			echo -e "${green}Unlock the AppImage and move it to the app menu.${white}"
+			flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
+			read -rp "Press enter to continue..."
+		else
+			echo ""
+		fi
 		;;
 	
 	"fed")
@@ -280,25 +319,28 @@ while true; do
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
 				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 				sudo dnf update @core
+			fi
 			;;
 		"nvi")
 			echo "For best performance on Linux, it's best to use the proprietary nvidia driver."
-			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if dnf repolist | grep rpmfusion-nonfree; then
-					dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+					sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
-					echo "ERROR: RPMFUSION NOT FOUND!"
+					sudo echo "ERROR: RPMFUSION NOT FOUND!"
+				fi
+			fi
 			;;
 		"zram")
 			echo "ZRAM is a modern implementation of the swapfile."
-			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				read -rp "Type size in GB for zram (Half of your RAM is a good place to start): " zram_size;
 				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
-					sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
+					sudo sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
 				else
 					echo "ERROR: INVALID INTEGER!"
 				fi
@@ -307,32 +349,59 @@ while true; do
 		"vmax")
 			echo -e "vm.max_map_count is the virtual memory limit on your machine, \nincreasing it can help with performance in games like Star Citizen."
 			echo ""
-			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
-				sysctl -w vm.max_map_count=16777216
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo sysctl -w vm.max_map_count=16777216
 			fi
 			;;
 		"dnf")
 			echo ""
 			echo -e "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\nAdding more capacity and allowing fastest mirror can speed up package handling."
 			echo ""
-			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r # One letter only
+			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
-    				sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
+    				sudo sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
 				else
     				echo -e "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
 				fi
-
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
-    				sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
+    				sudo sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
     				echo -e "fastestmirror=true" >> /etc/dnf/dnf.conf
 				fi
 				echo -e "Increased max_parallel_download to 10 and set fastestmirror to true."
 				echo ""
+			fi
+			;;
+		"vir")
+			echo ""
+			echo -e "Virtualization on Fedora is available through the QEMU emulator that works with KVM to create and manage your VMs.\nLibvirt is the service that will be set up to handle this."
+			echo ""
+			read -ep "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf install @virtualization
+				sudo sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+				sudo sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+				sudo systemctl start libvirtd
+				sudo systemctl enable libvirtd
+				sudo usermod -a -G libvirt $(whoami)
+			fi
+			;;
+		"upg")
+			echo ""
+			echo -e "Keeping your system up to date is very important for security purposes."
+			echo ""
+			read -ep "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf update -y && dnf upgrade -y
+				if [ -x "$(command -v flatpak)" ]; then
+					sudo flatpak update -y
+				fi
 			fi
 			;;
 		esac
@@ -351,33 +420,8 @@ while true; do
 		read -rp "Press enter to continue..."
 		;;
 
-	"fast")
+	"firm")
 		clear
-		read -rp "Press enter to continue..."
-		;;
-
-	"star")
-		clear
-		curl -sS https://starship.rs/install.sh | sh
-		read -rp "Press enter to continue..."
-		;;
-	
-	"fed")
-		clear
-		fedora
-		read -rp "Press enter to continue..."
-		;;
-
-	"deb")
-		clear
-		debian
-		read -rp "Press enter to continue..."
-		;;
-
-	"arch")
-		clear
-		arch
-		read -rp "Press enter to continue..."
 		;;
 
 	# If the selection is invalid
