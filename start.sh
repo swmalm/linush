@@ -9,7 +9,7 @@ art="
 "
 clear
 
-if [ "$EUID" -ne 1 ]; then
+if [ "$EUID" == 0 ]; then
 	echo "Please don't run the script with sudo!"
 	read -rp "Press any key to exit..."
 	exit
@@ -42,17 +42,16 @@ red='\e[0;31m'
 yellow='\e[1;33m'
 
 packageToInstall(){
-	packagesNeeded=$1
 	if [ -x "$(command -v apt-get)" ];then
-		sudo apt-get install -y "${packagesNeeded[@]}"
+		sudo apt-get install -y $@
 	elif [ -x "$(command -v dnf)" ];then
-		sudo dnf install -y "${packagesNeeded[@]}"
+		sudo dnf install -y $@
 	elif [ -x "$(command -v zypper)" ];then
-		sudo zypper install -y "${packagesNeeded[@]}"
+		sudo zypper install -y $@
 	elif [ -x "$(command -v pacman)" ];then
-		sudo pacman -S --noconfirm "${packagesNeeded[@]}"
+		sudo pacman -S --noconfirm $@
 	else
-		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
+		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
 	fi
 }
 
@@ -126,7 +125,7 @@ debian(){
 	echo -e "${blue}--------------------------------------${white}"
 	echo -e ""
 	echo -e "${green}DEBIAN${white}"
-	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}nvi${white} - Nvidia Driver"
 	echo -e "${red}vir${white} - Virtualization"
 	echo -e "${red}upt${white} - Full System Upgrade"
 }
@@ -137,7 +136,7 @@ arch(){
 	echo -e "${blue}--------------------------------------${white}"
 	echo -e ""
 	echo -e "${green}ARCH${white}"
-	echo -e "${red}rpm${white} - Nvidia Driver"
+	echo -e "${red}nvi${white} - Nvidia Driver"
 	echo -e "${red}upt${white} - Full System Upgrade"
 	echo -e "${red}vir${white} - Virtualization"
 }
@@ -263,13 +262,13 @@ while true; do
 	"pkg")
 		clear
 		read -rp "Package to install: " pkg_select;
-		packageToInstall "${pkg_select[@]}"
+		packageToInstall $pkg_select
 		read -rp "Press enter to continue..."
 		;;
 
 	"fast")
 		clear
-		packageToInstall "fastfetch"
+		packageToInstall fastfetch
 		read -rp "Press enter to continue..."
 		;;
 
@@ -296,14 +295,12 @@ while true; do
 		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		echo ""
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
-			gamingPackages=("steam" "gamescope" "mangohud" "goverlay" "lutris")
-			packageToInstall "${gamingPackages[@]}"
-			mkdir "$HOME/AppImages"
+			packageToInstall steam gamescope mangohud goverlay lutris
+			mkdir -p "$HOME/AppImages"
 			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 			sudo flatpak install it.mijorus.gearlever -y
-			echo -e "${red}Unlock the AppImage and move it to the app menu."
-			sudo flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
+			echo -e "${green}Unlock the AppImage and move it to the app menu.${white}"
+			flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
 			read -rp "Press enter to continue..."
 		else
 			echo ""
