@@ -15,6 +15,20 @@ if [ "$EUID" -ne 0 ]; then
 	exit
 fi
 
+if [[ $(uname -r) == *"nobara"* ]]; then
+	echo -e "Nobara uses custom kernels, configs and packages that makes it incompatible with this script.\nTweaks included in Linush are already set by default."
+	echo ""
+	read -ep "Do you still want to continue? (y/n) > " -n 1 -r
+	echo ""
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		clear
+		echo "Good Luck!"
+	else
+		read -rp "Press any key to exit..."
+		exit
+	fi
+fi
+
 IFS=$'\n'
 for line in $art; do
     echo "$line"
@@ -31,19 +45,19 @@ packageToInstall(){
 	packagesNeeded="$1"
 	if [ -x "$(command -v apt-get)" ];
 	then
-		sudo apt-get install "${packagesNeeded[@]}"
+		apt-get install "${packagesNeeded[@]}"
 
 	elif [ -x "$(command -v dnf)" ];
 	then
-		sudo dnf install "${packagesNeeded[@]}"
+		dnf install "${packagesNeeded[@]}"
 
 	elif [ -x "$(command -v zypper)" ];
 	then
-		sudo zypper install "${packagesNeeded[@]}"
+		zypper install "${packagesNeeded[@]}"
 
 	elif [ -x "$(command -v pacman)" ];
 	then
-		sudo pacman -S "${packagesNeeded[@]}"
+		pacman -S "${packagesNeeded[@]}"
 
 	else
 		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
@@ -85,6 +99,7 @@ print_help(){
 	echo -e "${red}pkg${white} - Install, Update or Remove packages"
 	echo -e "${red}fast${white} - Fastfetch"
 	echo -e "${red}star${white} - Starship"
+	echo -e "${red}game${white} - Gaming Essentials"
 	echo -e ""
 	echo -e "${green}DISTROS${white}"
 	echo -e "${red}fed${white} - Fedora-based"
@@ -267,6 +282,10 @@ while true; do
 		curl -sS https://starship.rs/install.sh | sh
 		read -rp "Press enter to continue..."
 		;;
+
+	"game")
+		clear
+		;;
 	
 	"fed")
 		clear
@@ -278,24 +297,27 @@ while true; do
 			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
-				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-				sudo dnf update @core
+				dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+				dnf update @core
+			fi
 			;;
 		"nvi")
 			echo "For best performance on Linux, it's best to use the proprietary nvidia driver."
-			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if dnf repolist | grep rpmfusion-nonfree; then
 					dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
 					echo "ERROR: RPMFUSION NOT FOUND!"
+				fi
+			fi
 			;;
 		"zram")
 			echo "ZRAM is a modern implementation of the swapfile."
-			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				read -rp "Type size in GB for zram (Half of your RAM is a good place to start): " zram_size;
 				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
 					sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
@@ -307,9 +329,9 @@ while true; do
 		"vmax")
 			echo -e "vm.max_map_count is the virtual memory limit on your machine, \nincreasing it can help with performance in games like Star Citizen."
 			echo ""
-			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r # One letter only
+			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sysctl -w vm.max_map_count=16777216
 			fi
 			;;
@@ -317,15 +339,14 @@ while true; do
 			echo ""
 			echo -e "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\nAdding more capacity and allowing fastest mirror can speed up package handling."
 			echo ""
-			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r # One letter only
+			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
 			echo ""
-			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
     				sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
 				else
     				echo -e "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
 				fi
-
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
     				sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
@@ -335,36 +356,35 @@ while true; do
 				echo ""
 			fi
 			;;
+		"vir")
+			echo ""
+			echo -e "Virtualization on Fedora is available through the QEMU emulator that works with KVM to create and manage your VMs.\nLibvirt is the service that will be set up to handle this."
+			echo ""
+			read -ep "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				dnf install @virtualization
+				sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+				sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+				systemctl start libvirtd
+				systemctl enable libvirtd
+				usermod -a -G libvirt $(whoami)
+			fi
+			;;
+		"upg")
+			echo ""
+			echo -e "Keeping your system up to date is very important for security purposes."
+			echo ""
+			read -ep "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				dnf update -y && dnf upgrade -y
+				if [ -x "$(command -v flatpak)" ]; then
+					flatpak update -y
+				fi
+			fi
+			;;
 		esac
-		read -rp "Press enter to continue..."
-		;;
-
-	"deb")
-		clear
-		debian
-		read -rp "Press enter to continue..."
-		;;
-
-	"arch")
-		clear
-		arch
-		read -rp "Press enter to continue..."
-		;;
-
-	"fast")
-		clear
-		read -rp "Press enter to continue..."
-		;;
-
-	"star")
-		clear
-		curl -sS https://starship.rs/install.sh | sh
-		read -rp "Press enter to continue..."
-		;;
-	
-	"fed")
-		clear
-		fedora
 		read -rp "Press enter to continue..."
 		;;
 
