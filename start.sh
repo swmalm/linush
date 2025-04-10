@@ -43,24 +43,16 @@ yellow='\e[1;33m'
 
 packageToInstall(){
 	packagesNeeded=$1
-	if [ -x "$(command -v apt-get)" ];
-	then
-		apt-get install "$packagesNeeded"
-
-	elif [ -x "$(command -v dnf)" ];
-	then
-		dnf install "$packagesNeeded"
-
-	elif [ -x "$(command -v zypper)" ];
-	then
-		zypper install "$packagesNeeded"
-
-	elif [ -x "$(command -v pacman)" ];
-	then
-		pacman -S "$packagesNeeded"
-
+	if [ -x "$(command -v apt-get)" ];then
+		apt-get install -y "${packagesNeeded[@]}"
+	elif [ -x "$(command -v dnf)" ];then
+		dnf install -y "${packagesNeeded[@]}"
+	elif [ -x "$(command -v zypper)" ];then
+		zypper install -y "${packagesNeeded[@]}"
+	elif [ -x "$(command -v pacman)" ];then
+		pacman -S --noconfirm "${packagesNeeded[@]}"
 	else
-		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "$packagesNeeded"">&2;
+		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
 	fi
 }
 
@@ -271,7 +263,7 @@ while true; do
 	"pkg")
 		clear
 		read -rp "Package to install: " pkg_select;
-		packageToInstall "$pkg_select"
+		packageToInstall "${pkg_select[@]}"
 		read -rp "Press enter to continue..."
 		;;
 
@@ -304,8 +296,9 @@ while true; do
 		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		echo ""
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			packageToInstall "steam gamescope mangohud goverlay lutris"
-			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o ~/AppImages/heroic_games_launcher.appimage
+			gamingPackages=("steam" "gamescope" "mangohud" "goverlay" "lutris")
+			packageToInstall "${gamingPackages[@]}"
+			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 			flatpak install it.mijorus.gearlever -y
 			flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
 			read -rp "Press enter to continue..."
