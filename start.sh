@@ -296,11 +296,14 @@ while true; do
 		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		echo ""
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 			gamingPackages=("steam" "gamescope" "mangohud" "goverlay" "lutris")
 			packageToInstall "${gamingPackages[@]}"
+			mkdir "$HOME/AppImages"
 			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 			sudo flatpak install it.mijorus.gearlever -y
-			sudo flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
+			echo -e "${red}Unlock the AppImage and move it to the app menu."
+			sudo flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
 			read -rp "Press enter to continue..."
 		else
 			echo ""
