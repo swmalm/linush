@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Future Feature: "here's how you can do it manually if the config is different on your pc"
+# Future Features: "here's how you can do it manually if the config is different on your pc", "multiple options for parts of commands like only installing steam and not gamescope"
 
 art="
 ┏┓┓┏┏┓┏┳┓┏┓┳┳┓  ┳┳┓┏┓┳┓┏┓┏┓┏┓┳┓  ┏  ┓ ┏┓ ┏┓┏┓┓
@@ -101,10 +101,14 @@ print_help(){
 	echo -e "${red}star${white} - Starship"
 	echo -e "${red}game${white} - Gaming Essentials"
 	echo -e ""
-	echo -e "${green}DISTROS${white}"
+	echo -e "${green}DISTRO SPECIFIC${white}"
 	echo -e "${red}fed${white} - Fedora-based"
 	echo -e "${red}arch${white} - Arch-based"
 	echo -e "${red}deb${white} - Debian-based"
+	echo -e ""	
+	echo -e "${green}SYSTEM${white}"
+	echo -e "${red}firm${white} - Firmware"
+	echo -e "${red}flat${white} - Flatpak"
 	echo -e ""
 	echo -e "${yellow}ex${white} - Exit the program"
 }
@@ -283,8 +287,30 @@ while true; do
 		read -rp "Press enter to continue..."
 		;;
 
+	"flat")
+		clear
+		;;
+
 	"game")
 		clear
+		echo -e "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\nthere are certain packages that are recommended to have installed."
+		echo -e ""
+		echo -e "Packages that will be installed:\nSteam: Binary version\nSteam-devices: Adds permissions for steam to use certain hardware for things like VR"
+		echo -e "Gamescope: Valve's window manager that can improve support for some games and features like HDR\nMangoHud: FPS counter and hardware monitoring software"
+		echo -e "Goverlay: MangoHud configuration tool\nLutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc."
+		echo -e "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming"
+		echo -e "Gear Lever: Utility for handling .appimages like Heroic Games Launcher"
+		echo ""
+		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
+		echo ""
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			packageToInstall "steam steam-devices gamescope mangohud goverlay lutris"
+			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o ~/AppImages/heroic_games_launcher.appimage
+			flatpak install it.mijorus.gearlever -y
+			flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
+		else
+			echo ""
+		fi
 		;;
 	
 	"fed")
@@ -398,6 +424,10 @@ while true; do
 		clear
 		arch
 		read -rp "Press enter to continue..."
+		;;
+
+	"firm")
+		clear
 		;;
 
 	# If the selection is invalid
