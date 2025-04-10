@@ -9,8 +9,8 @@ art="
 "
 clear
 
-if [ "$EUID" -ne 0 ]; then
-	echo "Please run the script with sudo!"
+if [ "$EUID" -ne 1 ]; then
+	echo "Please don't run the script with sudo!"
 	read -rp "Press any key to exit..."
 	exit
 fi
@@ -44,13 +44,13 @@ yellow='\e[1;33m'
 packageToInstall(){
 	packagesNeeded=$1
 	if [ -x "$(command -v apt-get)" ];then
-		apt-get install -y "${packagesNeeded[@]}"
+		sudo apt-get install -y "${packagesNeeded[@]}"
 	elif [ -x "$(command -v dnf)" ];then
-		dnf install -y "${packagesNeeded[@]}"
+		sudo dnf install -y "${packagesNeeded[@]}"
 	elif [ -x "$(command -v zypper)" ];then
-		zypper install -y "${packagesNeeded[@]}"
+		sudo zypper install -y "${packagesNeeded[@]}"
 	elif [ -x "$(command -v pacman)" ];then
-		pacman -S --noconfirm "${packagesNeeded[@]}"
+		sudo pacman -S --noconfirm "${packagesNeeded[@]}"
 	else
 		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
 	fi
@@ -299,8 +299,8 @@ while true; do
 			gamingPackages=("steam" "gamescope" "mangohud" "goverlay" "lutris")
 			packageToInstall "${gamingPackages[@]}"
 			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
-			flatpak install it.mijorus.gearlever -y
-			flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
+			sudo flatpak install it.mijorus.gearlever -y
+			sudo flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
 			read -rp "Press enter to continue..."
 		else
 			echo ""
@@ -317,8 +317,8 @@ while true; do
 			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
-				dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-				dnf update @core
+				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+				sudo dnf update @core
 			fi
 			;;
 		"nvi")
@@ -327,9 +327,9 @@ while true; do
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if dnf repolist | grep rpmfusion-nonfree; then
-					dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+					sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
-					echo "ERROR: RPMFUSION NOT FOUND!"
+					sudo echo "ERROR: RPMFUSION NOT FOUND!"
 				fi
 			fi
 			;;
@@ -340,7 +340,7 @@ while true; do
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				read -rp "Type size in GB for zram (Half of your RAM is a good place to start): " zram_size;
 				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
-					sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
+					sudo sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
 				else
 					echo "ERROR: INVALID INTEGER!"
 				fi
@@ -352,7 +352,7 @@ while true; do
 			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				sysctl -w vm.max_map_count=16777216
+				sudo sysctl -w vm.max_map_count=16777216
 			fi
 			;;
 		"dnf")
@@ -363,12 +363,12 @@ while true; do
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
-    				sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
+    				sudo sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
 				else
     				echo -e "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
 				fi
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
-    				sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
+    				sudo sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
     				echo -e "fastestmirror=true" >> /etc/dnf/dnf.conf
 				fi
@@ -383,12 +383,12 @@ while true; do
 			read -ep "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				dnf install @virtualization
-				sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
-				sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
-				systemctl start libvirtd
-				systemctl enable libvirtd
-				usermod -a -G libvirt $(whoami)
+				sudo dnf install @virtualization
+				sudo sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+				sudo sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+				sudo systemctl start libvirtd
+				sudo systemctl enable libvirtd
+				sudo usermod -a -G libvirt $(whoami)
 			fi
 			;;
 		"upg")
@@ -398,9 +398,9 @@ while true; do
 			read -ep "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
 			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				dnf update -y && dnf upgrade -y
+				sudo dnf update -y && dnf upgrade -y
 				if [ -x "$(command -v flatpak)" ]; then
-					flatpak update -y
+					sudo flatpak update -y
 				fi
 			fi
 			;;
