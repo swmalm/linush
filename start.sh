@@ -42,25 +42,25 @@ red='\e[0;31m'
 yellow='\e[1;33m'
 
 packageToInstall(){
-	packagesNeeded="$1"
+	packagesNeeded=$1
 	if [ -x "$(command -v apt-get)" ];
 	then
-		apt-get install "${packagesNeeded[@]}"
+		apt-get install "$packagesNeeded"
 
 	elif [ -x "$(command -v dnf)" ];
 	then
-		dnf install "${packagesNeeded[@]}"
+		dnf install "$packagesNeeded"
 
 	elif [ -x "$(command -v zypper)" ];
 	then
-		zypper install "${packagesNeeded[@]}"
+		zypper install "$packagesNeeded"
 
 	elif [ -x "$(command -v pacman)" ];
 	then
-		pacman -S "${packagesNeeded[@]}"
+		pacman -S "$packagesNeeded"
 
 	else
-		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "${packagesNeeded[@]}"">&2;
+		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "$packagesNeeded"">&2;
 	fi
 }
 
@@ -304,8 +304,7 @@ while true; do
 		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		echo ""
 		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			pkgs = "steam gamescope mangohud goverlay lutris"
-			packageToInstall "$pkgs"
+			packageToInstall "steam gamescope mangohud goverlay lutris"
 			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o ~/AppImages/heroic_games_launcher.appimage
 			flatpak install it.mijorus.gearlever -y
 			flatpak run it.mijorus.gearlever --integrate -y ~/AppImages/heroic_games_launcher.appimage
