@@ -53,6 +53,7 @@ packageToInstall(){
 		sudo pacman -S --noconfirm $@
 	else
 		printf "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
+		read -rp "Press enter to continue..."
 	fi
 }
 
@@ -312,9 +313,11 @@ while true; do
 				read -rp "Press enter to continue..."
 			else
 				printf "\n"
+				read -rp "Press enter to continue..."
 			fi
 		else
-			printf "Flatpak is not installed on this system. You can use the 'flat' tool to install it and try again."
+			printf "Flatpak is not installed on this system. You can use the 'flat' tool to install it and try again.\n\n"
+			read -rp "Press enter to continue..."
 		fi
 		;;
 	
@@ -341,7 +344,8 @@ while true; do
 				if dnf repolist | grep rpmfusion-nonfree; then
 					sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
-					printf "ERROR: RPMFUSION NOT FOUND!"
+					printf "ERROR: RPMFUSION NOT FOUND!\n\n"
+					read -rp "Press enter to continue..."
 				fi
 			fi
 			;;
@@ -354,7 +358,8 @@ while true; do
 				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
 					sudo sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
 				else
-					printf "ERROR: INVALID INTEGER!"
+					printf "ERROR: INVALID INTEGER! \n\n"
+					read -rp "Press enter to continue..."
 				fi
 			fi
 			;;
