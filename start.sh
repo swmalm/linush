@@ -285,6 +285,13 @@ while true; do
 
 	"flat")
 		clear
+		packageToInstall flatpak
+		if [ -n "$XDG_CURRENT_DESKTOP" == "GNOME" ];then
+			packageToInstall gnome-software-plugin-flatpak
+		elif [ -n "$XDG_CURRENT_DESKTOP" == "KDE" ];then
+			packageToInstall plasma-discover-backend-flatpak
+		fi
+		flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 		;;
 
 	"game")
@@ -325,7 +332,7 @@ while true; do
 		clear
 		fedora
 		read -rp "Selection > " fed_select;
-		prinf "\n"
+		printf "\n"
     	case $fed_select in
 		"rpm")
 			printf "RPM Fusion is a repository with non-free software like proprietary nvidia drivers.\n\n"
