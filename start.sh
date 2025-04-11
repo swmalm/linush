@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Future Features: "here's how you can do it manually if the config is different on your pc", "multiple options for parts of commands like only installing steam and not gamescope"
 
@@ -10,25 +10,24 @@ art="
 clear
 
 if [ "$EUID" == 0 ]; then
-	echo "Please don't run the script with sudo!"
+	printf "Please don't run the script with sudo!"
 	read -rp "Press any key to exit..."
 	exit
 fi
 
 if [[ $(uname -r) == *"nobara"* ]]; then
-	echo -e "Nobara uses custom kernels, configs and packages that makes it incompatible with this script.\nTweaks included in Linush are already set by default."
-	echo ""
-	read -ep "Do you still want to continue? (y/n) > " -n 1 -r
-	echo ""
-	if [[ $REPLY =~ ^[Yy]$ ]]; then
-		clear
-		echo "Good Luck!"
-	else
-		read -rp "Press any key to exit..."
-		exit
-	fi
+    printf "Nobara uses custom kernels, configs and packages that makes it incompatible with this script.\n"
+    printf "Tweaks included in Linush are already set by default.\n\n"
+    read -p "Do you still want to continue? (y/n) > " -n 1 -r
+    printf "\n"
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        clear
+        printf "Good Luck!\n"
+    else
+        read -rp "Press any key to exit..."
+        exit
+    fi
 fi
-
 IFS=$'\n'
 for line in $art; do
     echo "$line"
@@ -51,100 +50,99 @@ packageToInstall(){
 	elif [ -x "$(command -v pacman)" ];then
 		sudo pacman -S --noconfirm $@
 	else
-		echo "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
+		printf "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
+		read -rp "Press enter to continue..."
 	fi
 }
 
 read -rp "Welcome to Linush! Press enter to continue..."
 
 print_help(){
-	echo -e "${blue}**************************************${white}"
-	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
-	echo -e "${blue}--------------------------------------${white}"
-	echo ""
-	echo -e "${green}NETWORK${white}"
-	echo -e "${red}ni${white} - Network Information"
-	echo ""
-	echo -e "${green}USER UTILITY${white}"
-	echo -e "${red}ua${white} - Create a new user"
-	echo -e "${red}ul${white} - List all logged in users"
-	echo -e "${red}uv${white} - View users properties"
-	echo -e "${red}um${white} - Modify users properties"
-	echo -e "${red}ud${white} - Delete a user"
-	echo ""
-	echo -e "${green}GROUP UTILITY${white}"
-	echo -e "${red}ga${white} - Create a new group"
-	echo -e "${red}gl${white} - List all groups, not system groups"
-	echo -e "${red}gv${white} - List all users in a group"
-	echo -e "${red}gm${white} - Add/Remove user to/from a group"
-	echo -e "${red}gd${white} - Delete group, not system group"
-	echo ""
-	echo -e "${green}FOLDER UTILITY${white}"
-	echo -e "${red}fa${white} - Create a folder"
-	echo -e "${red}fl${white} - View content of a folder"
-	echo -e "${red}fv${white} - View folder properties"
-	echo -e "${red}fm${white} - Modify folder properties"
-	echo -e "${red}fd${white} - Delete a folder"
-	echo ""
-	echo -e "${green}PACKAGES${white}"
-	echo -e "${red}pkg${white} - Install, Update or Remove packages"
-	echo -e "${red}fast${white} - Fastfetch"
-	echo -e "${red}star${white} - Starship"
-	echo -e "${red}game${white} - Gaming Essentials"
-	echo -e ""
-	echo -e "${green}DISTRO SPECIFIC${white}"
-	echo -e "${red}fed${white} - Fedora-based"
-	echo -e "${red}arch${white} - Arch-based"
-	echo -e "${red}deb${white} - Debian-based"
-	echo -e ""	
-	echo -e "${green}SYSTEM${white}"
-	echo -e "${red}firm${white} - Firmware"
-	echo -e "${red}flat${white} - Flatpak"
-	echo -e ""
-	echo -e "${yellow}ex${white} - Exit the program"
+    printf "${blue}**************************************${white}\n"
+    printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
+    printf "${blue}--------------------------------------${white}\n\n"
+
+    printf "${green}NETWORK${white}\n"
+    printf "${red}ni${white} - Network Information\n\n"
+
+    printf "${green}USER UTILITY${white}\n"
+    printf "${red}ua${white} - Create a new user\n"
+    printf "${red}ul${white} - List all logged in users\n"
+    printf "${red}uv${white} - View users properties\n"
+    printf "${red}um${white} - Modify users properties\n"
+    printf "${red}ud${white} - Delete a user\n\n"
+
+    printf "${green}GROUP UTILITY${white}\n"
+    printf "${red}ga${white} - Create a new group\n"
+    printf "${red}gl${white} - List all groups, not system groups\n"
+    printf "${red}gv${white} - List all users in a group\n"
+    printf "${red}gm${white} - Add/Remove user to/from a group\n"
+    printf "${red}gd${white} - Delete group, not system group\n\n"
+
+    printf "${green}FOLDER UTILITY${white}\n"
+    printf "${red}fa${white} - Create a folder\n"
+    printf "${red}fl${white} - View content of a folder\n"
+    printf "${red}fv${white} - View folder properties\n"
+    printf "${red}fm${white} - Modify folder properties\n"
+    printf "${red}fd${white} - Delete a folder\n\n"
+
+    printf "${green}PACKAGES${white}\n"
+    printf "${red}pkg${white} - Install, Update or Remove packages\n"
+    printf "${red}fast${white} - Fastfetch\n"
+    printf "${red}star${white} - Starship\n"
+    printf "${red}game${white} - Gaming Essentials\n\n"
+
+    printf "${green}DISTRO SPECIFIC${white}\n"
+    printf "${red}fed${white} - Fedora-based\n"
+    printf "${red}arch${white} - Arch-based\n"
+    printf "${red}deb${white} - Debian-based\n\n"
+
+    printf "${green}SYSTEM${white}\n"
+    printf "${red}firm${white} - Firmware\n"
+    printf "${red}flat${white} - Flatpak\n\n"
+
+    printf "${yellow}ex${white} - Exit the program\n"
 }
 
 fedora(){
-	echo -e "${blue}**************************************${white}"
-	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
-	echo -e "${blue}--------------------------------------${white}"
-	echo -e "${green}FEDORA${white}"
-	echo -e ""
-	echo -e "${red}rpm${white} - RPM Fusion"
-	echo -e "${red}dnf${white} - DNF Config"
-	echo -e "${red}zram${white} - Edit zram swap size"
-	echo -e "${red}vmax${white} - Increase vm.max_map_count"
-	echo -e "${red}vir${white} - Virtualization"
-	echo -e "${red}upg${white} - Full System Upgrade"
-	echo -e "${red}nvi${white} - Install NVIDIA Driver and CUDA"
+    printf "${blue}**************************************${white}\n"
+    printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
+    printf "${blue}--------------------------------------${white}\n\n"
+    printf "${green}FEDORA${white}\n"
+    printf "${red}rpm${white} - RPM Fusion\n"
+    printf "${red}dnf${white} - DNF Config\n"
+    printf "${red}zram${white} - Edit zram swap size\n"
+    printf "${red}vmax${white} - Increase vm.max_map_count\n"
+    printf "${red}vir${white} - Virtualization\n"
+    printf "${red}upg${white} - Full System Upgrade\n"
+    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n"
 }
 
 debian(){
-	echo -e "${blue}**************************************${white}"
-	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
-	echo -e "${blue}--------------------------------------${white}"
-	echo -e ""
-	echo -e "${green}DEBIAN${white}"
-	echo -e "${red}nvi${white} - Nvidia Driver"
-	echo -e "${red}vir${white} - Virtualization"
-	echo -e "${red}upt${white} - Full System Upgrade"
+    printf "${blue}**************************************${white}\n"
+    printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
+    printf "${blue}--------------------------------------${white}\n\n"
+    printf "${green}DEBIAN${white}\n"
+    printf "${red}nvi${white} - Nvidia Driver\n"
+    printf "${red}vir${white} - Virtualization\n"
+    printf "${red}upt${white} - Full System Upgrade\n"
 }
 
+
 arch(){
-	echo -e "${blue}**************************************${white}"
-	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
-	echo -e "${blue}--------------------------------------${white}"
-	echo -e ""
-	echo -e "${green}ARCH${white}"
-	echo -e "${red}nvi${white} - Nvidia Driver"
-	echo -e "${red}upt${white} - Full System Upgrade"
-	echo -e "${red}vir${white} - Virtualization"
+    printf "${blue}**************************************${white}\n"
+    printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
+    printf "${blue}--------------------------------------${white}\n\n"
+    printf "${green}ARCH${white}\n"
+    printf "${red}nvi${white} - Nvidia Driver\n"
+    printf "${red}upt${white} - Full System Upgrade\n"
+    printf "${red}vir${white} - Virtualization\n"
 }
 
 sysman_logo(){
-	echo -e "${blue}**************************************${white}"
-	echo "     SYSTEM MANAGER (v0.1-rewrite)     "
-	echo -e "${blue}--------------------------------------${white}"
+    printf "${blue}**************************************${white}\n"
+    printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
+    printf "${blue}--------------------------------------${white}\n"
 }
 
 while true; do
@@ -152,7 +150,7 @@ while true; do
 	# Start of loop, clears terminal, prints the header and asks for selection 
     clear
     print_help
-	echo ""
+	printf "\n"
     read -rp "Selection > " selection;
     case $selection in
 
@@ -165,7 +163,7 @@ while true; do
 	# Exit program
     "ex")
 		clear
-        echo "Quitting...";
+        printf "Quitting...";
         exit 0
         ;;
 
@@ -274,7 +272,12 @@ while true; do
 
 	"star")
 		clear
-		curl -sS https://starship.rs/install.sh | sh
+		if [ -x "$(command -v curl)" ];then
+			curl -sS https://starship.rs/install.sh | sh
+		else
+			packageToInstall curl
+			curl -sS https://starship.rs/install.sh | sh
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
@@ -284,26 +287,35 @@ while true; do
 
 	"game")
 		clear
-		echo -e "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\nthere are certain packages that are recommended to have installed."
-		echo -e ""
-		echo -e "Packages that will be installed:\nSteam: Binary version"
-		echo -e "Gamescope: Valve's window manager that can improve support for some games and features like HDR\nMangoHud: FPS counter and hardware monitoring software"
-		echo -e "Goverlay: MangoHud configuration tool\nLutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc."
-		echo -e "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming"
-		echo -e "Gear Lever: Utility for handling .appimages like Heroic Games Launcher"
-		echo ""
-		read -p "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
-		echo ""
-		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			packageToInstall steam gamescope mangohud goverlay lutris
-			mkdir -p "$HOME/AppImages"
-			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
-			sudo flatpak install it.mijorus.gearlever -y
-			echo -e "${green}Unlock the AppImage and move it to the app menu.${white}"
-			flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
-			read -rp "Press enter to continue..."
+
+		printf "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\n"
+		printf "there are certain packages that are recommended to have installed.\n\n"
+		printf "Packages that will be installed:\n"
+		printf "Steam: Binary version\n"
+		printf "Gamescope: Valve's window manager that can improve support for some games and features like HDR\n"
+		printf "MangoHud: FPS counter and hardware monitoring software\n"
+		printf "Goverlay: MangoHud configuration tool\n"
+		printf "Lutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc.\n"
+		printf "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming\n"
+		printf "Gear Lever: Utility for handling .appimages like Heroic Games Launcher\n\n"
+		read -rp "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
+		printf "\n"
+		if [ -x "$(command -v flatpak)" ];then
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				packageToInstall steam gamescope mangohud goverlay lutris curl
+				mkdir -p "$HOME/AppImages"
+				curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
+				sudo flatpak install it.mijorus.gearlever -y
+				printf "${green}Unlock the AppImage and move it to the app menu.${white}\n"
+				flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
+				read -rp "Press enter to continue..."
+			else
+				printf "\n"
+				read -rp "Press enter to continue..."
+			fi
 		else
-			echo ""
+			printf "Flatpak is not installed on this system. You can use the 'flat' tool to install it and try again.\n\n"
+			read -rp "Press enter to continue..."
 		fi
 		;;
 	
@@ -311,69 +323,95 @@ while true; do
 		clear
 		fedora
 		read -rp "Selection > " fed_select;
+		prinf "\n"
     	case $fed_select in
 		"rpm")
-			echo "RPM Fusion is a repository with non-free software like proprietary nvidia drivers."
+			printf "RPM Fusion is a repository with non-free software like proprietary nvidia drivers.\n\n"
 			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
-			echo ""
+			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
 				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 				sudo dnf update @core
 			fi
 			;;
 		"nvi")
-			echo "For best performance on Linux, it's best to use the proprietary nvidia driver."
+			printf "For best performance on Linux, it's best to use the proprietary nvidia driver.\n\n"
 			read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
-			echo ""
+			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if dnf repolist | grep rpmfusion-nonfree; then
 					sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
-					sudo echo "ERROR: RPMFUSION NOT FOUND!"
+					printf "ERROR: RPMFUSION NOT FOUND!\n\n"
+					read -rp "Press enter to continue..."
 				fi
 			fi
 			;;
 		"zram")
-			echo "ZRAM is a modern implementation of the swapfile."
+			printf "ZRAM is a modern implementation of the swapfile.\n\n"
 			read -p "Do you want to increase your zram size? (y/n) > " -n 1 -r
-			echo ""
+			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				read -rp "Type size in GB for zram (Half of your RAM is a good place to start): " zram_size;
 				if [[ "$zram_size" =~ ^[0-9]+$ ]]; then
 					sudo sed -i "/zram-size/c\\zram-size = $zram_size * 1024" "/usr/lib/systemd/zram-generator.conf"
 				else
-					echo "ERROR: INVALID INTEGER!"
+					printf "ERROR: INVALID INTEGER! \n\n"
+					read -rp "Press enter to continue..."
 				fi
 			fi
 			;;
 		"vmax")
-			echo -e "vm.max_map_count is the virtual memory limit on your machine, \nincreasing it can help with performance in games like Star Citizen."
-			echo ""
+			printf "vm.max_map_count is the virtual memory limit on your machine, \n"
+			printf "increasing it can help with performance in games like Star Citizen.\n\n"
 			read -p "Do you want to increase your virtual memory to a recommended limit? (y/n) > " -n 1 -r
-			echo ""
+			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sudo sysctl -w vm.max_map_count=16777216
 			fi
 			;;
 		"dnf")
-			echo ""
-			echo -e "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\nAdding more capacity and allowing fastest mirror can speed up package handling."
-			echo ""
-			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
-			echo ""
+			printf "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\n"
+			printf "Adding more capacity and allowing fastest mirror can speed up package handling. \n\n"
+			read -p "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
+			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
     				sudo sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
 				else
-    				echo -e "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+    				printf "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
 				fi
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
     				sudo sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
-    				echo -e "fastestmirror=true" >> /etc/dnf/dnf.conf
+    				printf "fastestmirror=true" >> /etc/dnf/dnf.conf
 				fi
-				echo -e "Increased max_parallel_download to 10 and set fastestmirror to true."
-				echo ""
+				printf "Increased max_parallel_download to 10 and set fastestmirror to true. \n"
+			fi
+			;;
+		"vir")
+			printf "Virtualization on Fedora is available through the QEMU emulator that works with KVM to create and manage your VMs.\n"
+			printf "Libvirt is the service that will be set up to handle this.\n\n"
+			read -p "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
+			printf "\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf install @virtualization
+				sudo sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+				sudo sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+				sudo systemctl start libvirtd
+				sudo systemctl enable libvirtd
+				sudo usermod -a -G libvirt $(whoami)
+			fi
+			;;
+		"upg")
+			printf "Keeping your system up to date is very important for security purposes.\n"
+			read -p "Would you like to check for updates on all your installed packages? (y/n) > " -n 1 -r
+			printf "\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf update -y && dnf upgrade -y
+				if [ -x "$(command -v flatpak)" ]; then
+					sudo flatpak update -y
+				fi
 			fi
 			;;
 		"vir")
@@ -426,8 +464,7 @@ while true; do
 
 	# If the selection is invalid
 	*)
-        echo "ERROR... [Invalid Selection: '$selection']"
-        echo ""
+        printf "ERROR... [Invalid Selection: '$selection'] \n\n"
 		read -rp "Press enter to continue..."
         ;;		
 esac
