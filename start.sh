@@ -18,7 +18,7 @@ fi
 if [[ $(uname -r) == *"nobara"* ]]; then
     printf "Nobara uses custom kernels, configs and packages that makes it incompatible with this script.\n"
     printf "Tweaks included in Linush are already set by default.\n\n"
-    read -ep "Do you still want to continue? (y/n) > " -n 1 -r
+    read -p "Do you still want to continue? (y/n) > " -n 1 -r
     printf "\n"
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         clear
@@ -360,7 +360,7 @@ while true; do
 		"dnf")
 			printf "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\n"
 			printf "Adding more capacity and allowing fastest mirror can speed up package handling. \n\n"
-			read -ep "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
+			read -p "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
@@ -379,7 +379,7 @@ while true; do
 		"vir")
 			printf "Virtualization on Fedora is available through the QEMU emulator that works with KVM to create and manage your VMs.\n"
 			printf "Libvirt is the service that will be set up to handle this.\n\n"
-			read -ep "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
+			read -p "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sudo dnf install @virtualization
@@ -392,7 +392,7 @@ while true; do
 			;;
 		"upg")
 			printf "Keeping your system up to date is very important for security purposes.\n"
-			read -ep "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
+			read -p "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sudo dnf update -y && dnf upgrade -y
