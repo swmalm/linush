@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Future Features: "here's how you can do it manually if the config is different on your pc", "multiple options for parts of commands like only installing steam and not gamescope"
 
@@ -273,7 +273,12 @@ while true; do
 
 	"star")
 		clear
-		curl -sS https://starship.rs/install.sh | sh
+		if [ -x "$(command -v curl)" ];then
+			curl -sS https://starship.rs/install.sh | sh
+		else
+			packageToInstall curl
+			curl -sS https://starship.rs/install.sh | sh
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
@@ -283,6 +288,7 @@ while true; do
 
 	"game")
 		clear
+
 		printf "Gaming on Linux is a bit different than on Windows and to maximize ease-of-use,\n"
 		printf "there are certain packages that are recommended to have installed.\n\n"
 		printf "Packages that will be installed:\n"
@@ -295,16 +301,20 @@ while true; do
 		printf "Gear Lever: Utility for handling .appimages like Heroic Games Launcher\n\n"
 		read -rp "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		printf "\n"
-		if [[ $REPLY =~ ^[Yy]$ ]]; then
-			packageToInstall steam gamescope mangohud goverlay lutris
-			mkdir -p "$HOME/AppImages"
-			curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
-			sudo flatpak install it.mijorus.gearlever -y
-			printf "${green}Unlock the AppImage and move it to the app menu.${white}\n"
-			flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
-			read -rp "Press enter to continue..."
+		if [ -x "$(command -v flatpak)" ];then
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				packageToInstall steam gamescope mangohud goverlay lutris curl
+				mkdir -p "$HOME/AppImages"
+				curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
+				sudo flatpak install it.mijorus.gearlever -y
+				printf "${green}Unlock the AppImage and move it to the app menu.${white}\n"
+				flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
+				read -rp "Press enter to continue..."
+			else
+				printf "\n"
+			fi
 		else
-			printf "\n"
+			printf "Flatpak is not installed on this system. You can use the 'flat' tool to install it and try again."
 		fi
 		;;
 	
@@ -331,7 +341,7 @@ while true; do
 				if dnf repolist | grep rpmfusion-nonfree; then
 					sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
 				else
-					sudo printf "ERROR: RPMFUSION NOT FOUND!"
+					printf "ERROR: RPMFUSION NOT FOUND!"
 				fi
 			fi
 			;;
@@ -392,7 +402,7 @@ while true; do
 			;;
 		"upg")
 			printf "Keeping your system up to date is very important for security purposes.\n"
-			read -p "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
+			read -p "Would you like to check for updates on all your installed packages? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sudo dnf update -y && dnf upgrade -y
