@@ -29,7 +29,6 @@ if [[ $(uname -r) == *"nobara"* ]]; then
     fi
 fi
 
-
 IFS=$'\n'
 for line in $art; do
     echo "$line"
