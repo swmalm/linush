@@ -286,12 +286,14 @@ while true; do
 	"flat")
 		clear
 		packageToInstall flatpak
-		if [ -n "$XDG_CURRENT_DESKTOP" == "GNOME" ];then
+		if [ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ];then
 			packageToInstall gnome-software-plugin-flatpak
-		elif [ -n "$XDG_CURRENT_DESKTOP" == "KDE" ];then
+		elif [ "$XDG_CURRENT_DESKTOP" == *"KDE"* ];then
 			packageToInstall plasma-discover-backend-flatpak
 		fi
 		flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+		printf "${green}Successfully installed Flathub and added Flathub as repository! ${white}\n\n"
+		read -rp "Press enter to continue..."
 		;;
 
 	"game")
