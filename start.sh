@@ -28,8 +28,6 @@ if [[ $(uname -r) == *"nobara"* ]]; then
         exit
     fi
 fi
-
-
 IFS=$'\n'
 for line in $art; do
     echo "$line"
@@ -409,6 +407,34 @@ while true; do
 			printf "Keeping your system up to date is very important for security purposes.\n"
 			read -p "Would you like to check for updates on all your installed packages? (y/n) > " -n 1 -r
 			printf "\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf update -y && dnf upgrade -y
+				if [ -x "$(command -v flatpak)" ]; then
+					sudo flatpak update -y
+				fi
+			fi
+			;;
+		"vir")
+			echo ""
+			echo -e "Virtualization on Fedora is available through the QEMU emulator that works with KVM to create and manage your VMs.\nLibvirt is the service that will be set up to handle this."
+			echo ""
+			read -ep "Do you want to enable virtualization support and have the current user be able to manage the VMs? (y/n) > " -n 1 -r
+			echo ""
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo dnf install @virtualization
+				sudo sed -i 's/^#unix_sock_group = "libvirt".*/unix_sock_group = "libvirt"/' /etc/libvirt/libvirtd.conf
+				sudo sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
+				sudo systemctl start libvirtd
+				sudo systemctl enable libvirtd
+				sudo usermod -a -G libvirt $(whoami)
+			fi
+			;;
+		"upg")
+			echo ""
+			echo -e "Keeping your system up to date is very important for security purposes."
+			echo ""
+			read -ep "Would you like to check for updates on all your installed packages, including flatpaks? (y/n) > " -n 1 -r
+			echo ""
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				sudo dnf update -y && dnf upgrade -y
 				if [ -x "$(command -v flatpak)" ]; then
