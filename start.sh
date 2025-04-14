@@ -470,6 +470,7 @@ while true; do
 					fi 
 				fi
 			fi
+			fi
 			;;
 		esac
 		read -rp "Press enter to continue..."
