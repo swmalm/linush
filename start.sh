@@ -462,7 +462,7 @@ while true; do
 						echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
 						sudo apt-get update
 						sudo apt-get install nvidia-driver firmware-misc-nonfree
-						printf "Installation complete. For the drivers to be applied you need to reboot.\n"
+						printf "${yellow}Installation complete. For the drivers to be applied you need to reboot.\n${white}"
 						read -rp "Reboot now? > (y/n)"
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
