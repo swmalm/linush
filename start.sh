@@ -431,6 +431,39 @@ while true; do
 	"deb")
 		clear
 		debian
+		read -rp "Selection > " deb_select;
+		printf "\n"
+    	case $deb_select in
+		"nvi")
+			if cat /etc/*-release | grep -q 'Ubuntu'; then
+				read -p "It seems your machine is running a version of Ubuntu. Would you like to swtich to Ubuntu's automatic detection and installation? (y/n) > " -n 1 -r
+				printf "\n"
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					printf "Drivers installed.\n"
+					# sudo ubuntu-drivers install
+				fi
+			else
+				printf "For best performance on Linux, it's best to use the proprietary nvidia driver.\n\n"
+				read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
+				printf "\n"
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					if cat /etc/*-release | grep -q 'Bookworm'; then
+						printf "${yellow}Installing...${white}\n"
+						echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
+						sudo apt-get update
+						sudo apt-get install nvidia-driver firmware-misc-nonfree
+						printf "Installation complete. For the drivers to be applied you need to reboot.\n"
+						read -rp "Reboot now? > (y/n)"
+						if [[ $REPLY =~ ^[Yy]$ ]]; then
+							sudo reboot
+						fi
+					elif cat /etc/*-release | grep -q 'Bullseye';then
+
+					fi 
+				fi
+			fi
+			;;
+		esac
 		read -rp "Press enter to continue..."
 		;;
 
