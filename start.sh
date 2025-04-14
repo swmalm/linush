@@ -491,6 +491,7 @@ while true; do
 				else
 					printf "Unsupported hardware."
 				fi
+			fi
 		;;
 		"upt")
 		;;
