@@ -435,11 +435,11 @@ while true; do
 		printf "\n"
     	case $deb_select in
 		"nvi")
-			if cat /etc/*-release | grep -q 'Ubuntu'; then
+			if [[ "$(cat /etc/*-release)" =~ Ubuntu ]]; then
 				read -p "It seems like you are running Ubuntu. Would you like to switch to Ubuntu's automatic driver installer? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
-					printf "Drivers installed.\n"
+					printf "${yellow}Installing drivers...${white}\n"
 					sudo ubuntu-drivers install
 				fi
 			else
@@ -447,6 +447,10 @@ while true; do
 				read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					if [[ "$(modinfo nvidia | grep ^version)" =~ version ]]; then
+						printf "Nvidia drivers already installed. Quiting..."
+						break
+					fi
 					if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
     					printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
