@@ -446,8 +446,8 @@ while true; do
 			read -p "Do you want to check for system compatibility and install the nvidia driver? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				if [[ $(lspci -k | grep VGA | grep NVIDIA) && $(cat /etc/*-release) =~ "Arch" ]]; then
-					gpu_model=$(lspci -k | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
+				if [[ $(lspci | grep VGA | grep NVIDIA) && $(cat /etc/*-release) =~ "Arch" ]]; then
+					gpu_model=$(lspci | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
 					if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
 						cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
 						kernel=$(pacman -Q | grep -E '^linux(| |-lts)[^-headers]' | cut -d ' ' -f 1)
@@ -481,7 +481,7 @@ while true; do
 								sudo sed -i 's/^\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 ibt=off"/' /etc/default/grub
 								sudo grub-mkconfig -o /boot/grub/grub.cfg
 							else
-								printf "Kernel is already set up."
+								printf "Kernel is already set up.\n"
 							fi
 						fi
 						read -p "Do you want to reboot now to reload the new driver? (y/n) > " -n 1 -r
@@ -490,10 +490,10 @@ while true; do
 							sudo reboot
 						fi
 					else
-						printf "Unsupported hardware or Linux distribution."
+						printf "Unsupported hardware or Linux distribution.\n"
 					fi
 				else
-					printf "NVIDIA Hardware not found."
+					printf "NVIDIA Hardware not found.\n\n"
 				fi
 			fi
 		;;
