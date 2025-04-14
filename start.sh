@@ -448,7 +448,7 @@ while true; do
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
 					if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
-						printf "${yellow}Installing...${white}\n"
+    					printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
 						sudo apt-get update -y
 						sudo apt-get install nvidia-driver firmware-misc-nonfree -y
@@ -457,6 +457,7 @@ while true; do
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
 						fi
+					fi  # <-- This was missing
 					if [[ "$(cat /etc/*-release)" =~ bullseye ]]; then
 						printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
@@ -467,9 +468,8 @@ while true; do
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
 						fi
-					fi 
+					fi
 				fi
-			fi
 			fi
 			;;
 		esac
