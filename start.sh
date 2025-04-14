@@ -436,28 +436,28 @@ while true; do
     	case $deb_select in
 		"nvi")
 			if cat /etc/*-release | grep -q 'Ubuntu'; then
-				read -p "It seems your machine is running a version of Ubuntu. Would you like to swtich to Ubuntu's automatic detection and installation? (y/n) > " -n 1 -r
+				read -p "It seems like you are running Ubuntu. Would you like to switch to Ubuntu's automatic driver installer? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
 					printf "Drivers installed.\n"
-					# sudo ubuntu-drivers install
+					sudo ubuntu-drivers install
 				fi
 			else
 				printf "For best performance on Linux, it's best to use the proprietary nvidia driver.\n\n"
 				read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
-					if cat /etc/*-release | grep 'bookworm'; then
+					if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
 						printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
-						sudo apt-get update
-						sudo apt-get install nvidia-driver firmware-misc-nonfree
+						sudo apt-get update -y
+						sudo apt-get install nvidia-driver firmware-misc-nonfree -y
 						printf "Installation complete. For the drivers to be applied you need to reboot.\n"
-						read -rp "Reboot now? > (y/n)"
+						read -p "Reboot now? (y/n) > " -n 1 -r
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
 						fi
-					elif cat /etc/*-release | grep 'bullseye';then
+					if [[ "$(cat /etc/*-release)" =~ bullseye ]]; then
 						printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
 						sudo apt-get update
