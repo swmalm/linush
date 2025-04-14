@@ -446,50 +446,54 @@ while true; do
 			read -p "Do you want to check for system compatibility and install the nvidia driver? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				gpu_model=$(lspci -k | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
-				if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
-					cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
-					kernel=$(pacman -Q | grep -E '^linux(| |-lts)[^-headers]' | cut -d ' ' -f 1)
-					header="${kernel}-headers"
-					if [[ "$kernel" = "linux" ]]; then
-						packageToInstall nvidia-open nvidia-utils nvidia-settings lib32-nvidia-utils "$header"
-						printf "options nvidia_drm modeset=1\noptions nvidia_drm fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
-						sudo sed -i 's/^MODULES=(.*)/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
-						sudo sed -i 's/\(HOOKS=.*\)\<kms\>\(.*\)/\1\2/' /etc/mkinitcpio.conf
-						printf "options nvidia NVreg_PreserveVideoMemoryAllocations=1\noptions nvidia NVreg_TemporaryFilePath=/var/tmp" | sudo tee -a /etc/modprobe.d/nvidia.conf > /dev/null
-						sudo mkinitcpio -P
-						sudo systemctl enable nvidia-suspend
-                    	sudo systemctl enable nvidia-hibernate
-                    	sudo systemctl enable nvidia-resume
-					elif [[ "$kernel" = "linux-lts" ]]; then
-						packageToInstall nvidia-open-lts nvidia-utils nvidia-settings "$header"
-						printf "options nvidia_drm modeset=1\noptions nvidia_drm fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
-						sudo sed -i 's/^MODULES=(.*)/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
-						sudo sed -i 's/\(HOOKS=.*\)\<kms\>\(.*\)/\1\2/' /etc/mkinitcpio.conf
-						printf "options nvidia NVreg_PreserveVideoMemoryAllocations=1\noptions nvidia NVreg_TemporaryFilePath=/var/tmp" | sudo tee -a /etc/modprobe.d/nvidia.conf > /dev/null
-						sudo mkinitcpio -P
-						sudo systemctl enable nvidia-suspend
-                    	sudo systemctl enable nvidia-hibernate
-                    	sudo systemctl enable nvidia-resume
-					else
-						printf "Unsupported Kernel."
-						return
-					fi
-					if [[ "$cpu_model" -ge 11 ]]; then
-						if [[ ! $(grep -w ibt=off /etc/default/grub) ]]; then
-							sudo sed -i 's/^\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 ibt=off"/' /etc/default/grub
-    						sudo grub-mkconfig -o /boot/grub/grub.cfg
+				if [[ $(lspci -k | grep VGA | grep NVIDIA) && $(cat /etc/*-release) =~ "Arch" ]]; then
+					gpu_model=$(lspci -k | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
+					if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
+						cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
+						kernel=$(pacman -Q | grep -E '^linux(| |-lts)[^-headers]' | cut -d ' ' -f 1)
+						header="${kernel}-headers"
+						if [[ "$kernel" = "linux" ]]; then
+							packageToInstall nvidia-open nvidia-utils nvidia-settings lib32-nvidia-utils "$header"
+							printf "options nvidia_drm modeset=1\noptions nvidia_drm fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
+							sudo sed -i 's/^MODULES=(.*)/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+							sudo sed -i 's/\(HOOKS=.*\)\<kms\>\(.*\)/\1\2/' /etc/mkinitcpio.conf
+							printf "options nvidia NVreg_PreserveVideoMemoryAllocations=1\noptions nvidia NVreg_TemporaryFilePath=/var/tmp" | sudo tee -a /etc/modprobe.d/nvidia.conf > /dev/null
+							sudo mkinitcpio -P
+							sudo systemctl enable nvidia-suspend
+							sudo systemctl enable nvidia-hibernate
+							sudo systemctl enable nvidia-resume
+						elif [[ "$kernel" = "linux-lts" ]]; then
+							packageToInstall nvidia-open-lts nvidia-utils nvidia-settings "$header"
+							printf "options nvidia_drm modeset=1\noptions nvidia_drm fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
+							sudo sed -i 's/^MODULES=(.*)/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+							sudo sed -i 's/\(HOOKS=.*\)\<kms\>\(.*\)/\1\2/' /etc/mkinitcpio.conf
+							printf "options nvidia NVreg_PreserveVideoMemoryAllocations=1\noptions nvidia NVreg_TemporaryFilePath=/var/tmp" | sudo tee -a /etc/modprobe.d/nvidia.conf > /dev/null
+							sudo mkinitcpio -P
+							sudo systemctl enable nvidia-suspend
+							sudo systemctl enable nvidia-hibernate
+							sudo systemctl enable nvidia-resume
 						else
-							printf "Kernel is already set up."
+							printf "Unsupported Kernel."
+							return
 						fi
-					fi
-					read -p "Do you want to reboot now to reload the new driver? (y/n) > " -n 1 -r
-					printf "\n"
-					if [[ $REPLY =~ ^[Yy]$ ]]; then
-						sudo reboot
+						if [[ "$cpu_model" -ge 11 ]]; then
+							if [[ ! $(grep -w ibt=off /etc/default/grub) ]]; then
+								sudo sed -i 's/^\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 ibt=off"/' /etc/default/grub
+								sudo grub-mkconfig -o /boot/grub/grub.cfg
+							else
+								printf "Kernel is already set up."
+							fi
+						fi
+						read -p "Do you want to reboot now to reload the new driver? (y/n) > " -n 1 -r
+						printf "\n"
+						if [[ $REPLY =~ ^[Yy]$ ]]; then
+							sudo reboot
+						fi
+					else
+						printf "Unsupported hardware or Linux distribution."
 					fi
 				else
-					printf "Unsupported hardware."
+					printf "NVIDIA Hardware not found."
 				fi
 			fi
 		;;
