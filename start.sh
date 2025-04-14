@@ -447,7 +447,7 @@ while true; do
 				read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
-					if cat /etc/*-release | grep -q 'Bookworm'; then
+					if cat /etc/*-release | grep -q 'bookworm'; then
 						printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
 						sudo apt-get update
@@ -457,7 +457,7 @@ while true; do
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
 						fi
-					elif cat /etc/*-release | grep -q 'Bullseye';then
+					elif cat /etc/*-release | grep -q 'bullseye';then
 						printf "${yellow}Installing...${white}\n"
 						echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
 						sudo apt-get update
