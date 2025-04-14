@@ -464,7 +464,7 @@ while true; do
 						sudo apt-get update
 						sudo apt-get install nvidia-driver firmware-misc-nonfree
 						printf "${yellow}Installation complete. For the drivers to be applied you need to reboot.\n${white}"
-						read -rp "Reboot now? > (y/n)"
+						read -rp "Reboot now? > (y/n)\n"
 						if [[ $REPLY =~ ^[Yy]$ ]]; then
 							sudo reboot
 						fi
