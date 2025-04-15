@@ -434,6 +434,55 @@ while true; do
 	"deb")
 		clear
 		debian
+		read -rp "Selection > " deb_select;
+		printf "\n"
+    	case $deb_select in
+		"nvi")
+			if [[ "$(cat /etc/*-release)" =~ Ubuntu ]]; then
+				read -p "It seems like you are running Ubuntu. Would you like to switch to Ubuntu's automatic driver installer? (y/n) > " -n 1 -r
+				printf "\n"
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					printf "%bInstalling...%b\n\n" "$yellow" "$white"
+					sudo ubuntu-drivers install
+				fi
+			else
+				printf "For best performance on Linux, it's best to use the proprietary nvidia driver.\n\n"
+				read -p "Do you want to install the nvidia driver? (y/n) > " -n 1 -r
+				printf "\n"
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					driverInstalled=$(nvidia-smi | grep -o "Driver Version")
+					if [[ $driverInstalled ]]; then
+						printf "Nvidia drivers already installed.\n"
+					else
+						if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
+							printf "%bInstalling...%b\n\n" "$yellow" "$white"
+							packageToInstall linux-headers-amd64
+							printf "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
+							sudo apt-get update -y
+							packageToInstall nvidia-driver firmware-misc-nonfree -y
+							printf "%bInstallation complete. For the drivers to be applied you need to reboot.%b\n" "$yellow" "$white"
+							read -p "Reboot now? (y/n) > " -n 1 -r
+							if [[ $REPLY =~ ^[Yy]$ ]]; then
+								sudo reboot
+							fi
+						fi  # <-- This was missing
+						if [[ "$(cat /etc/*-release)" =~ bullseye ]]; then
+							printf "%bInstalling...%b\n\n" "$yellow" "$white"
+							packageToInstall linux-headers-amd64
+							printf "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
+							sudo apt-get update
+							packageToInstall nvidia-driver firmware-misc-nonfree
+							printf "%bInstallation complete. For the drivers to be applied you need to reboot.%b\n" "$yellow" "$white"
+							read -rp "Reboot now? > (y/n)\n"
+							if [[ $REPLY =~ ^[Yy]$ ]]; then
+								sudo reboot
+							fi
+						fi 
+					fi
+				fi
+			fi
+			;;
+		esac
 		read -rp "Press enter to continue..."
 		;;
 
