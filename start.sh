@@ -442,7 +442,7 @@ while true; do
 				read -p "It seems like you are running Ubuntu. Would you like to switch to Ubuntu's automatic driver installer? (y/n) > " -n 1 -r
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
-					printf "${yellow}Installing drivers...${white}\n"
+					printf "%bInstalling...%b\n\n" "$yellow" "$white"
 					sudo ubuntu-drivers install
 				fi
 			else
@@ -455,24 +455,24 @@ while true; do
 						printf "Nvidia drivers already installed.\n"
 					else
 						if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
-							printf "${yellow}Installing...${white}\n"
+							printf "%bInstalling...%b\n\n" "$yellow" "$white"
 							packageToInstall linux-headers-amd64
 							printf "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
 							sudo apt-get update -y
 							packageToInstall nvidia-driver firmware-misc-nonfree -y
-							printf "Installation complete. For the drivers to be applied you need to reboot.\n"
+							printf "%bInstallation complete. For the drivers to be applied you need to reboot.%b\n" "$yellow" "$white"
 							read -p "Reboot now? (y/n) > " -n 1 -r
 							if [[ $REPLY =~ ^[Yy]$ ]]; then
 								sudo reboot
 							fi
 						fi  # <-- This was missing
 						if [[ "$(cat /etc/*-release)" =~ bullseye ]]; then
-							printf "${yellow}Installing...${white}\n"
+							printf "%bInstalling...%b\n\n" "$yellow" "$white"
 							packageToInstall linux-headers-amd64
 							printf "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
 							sudo apt-get update
 							packageToInstall nvidia-driver firmware-misc-nonfree
-							printf "${yellow}Installation complete. For the drivers to be applied you need to reboot.\n${white}"
+							printf "%bInstallation complete. For the drivers to be applied you need to reboot.%b\n" "$yellow" "$white"
 							read -rp "Reboot now? > (y/n)\n"
 							if [[ $REPLY =~ ^[Yy]$ ]]; then
 								sudo reboot
