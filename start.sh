@@ -114,7 +114,7 @@ fedora(){
     printf "${red}vmax${white} - Increase vm.max_map_count\n"
     printf "${red}vir${white} - Virtualization\n"
     printf "${red}upg${white} - Full System Upgrade\n"
-    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n"
+    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n\n"
 }
 
 debian(){
@@ -124,7 +124,7 @@ debian(){
     printf "${green}DEBIAN${white}\n"
     printf "${red}nvi${white} - Nvidia Driver\n"
     printf "${red}vir${white} - Virtualization\n"
-    printf "${red}upt${white} - Full System Upgrade\n"
+    printf "${red}upt${white} - Full System Upgrade\n\n"
 }
 
 
@@ -382,22 +382,24 @@ while true; do
 			fi
 			;;
 		"dnf")
+			clear
 			printf "By default, DNF has pretty conservative settings for max_parallel_downloads and using the fastest mirror.\n"
 			printf "Adding more capacity and allowing fastest mirror can speed up package handling. \n\n"
-			read -p "Do you want to increase max_parallel_download and make sure to always use the fastest mirror available? (y/n) > " -n 1 -r
+			read -p "Do you want to increase max_parallel_download and always use the fastest mirror? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
-    				sudo sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
+				if grep -q "max_parallel_downloads=" /etc/dnf/dnf.conf; then
+    				sudo sed -i '/^max_parallel_downloads=/c\max_parallel_downloads=10' /etc/dnf/dnf.conf
 				else
-    				sudo printf "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+    				printf "\nmax_parallel_downloads=10" | sudo tee -a /etc/dnf/dnf.conf > /dev/null
 				fi
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
     				sudo sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
-    				sudo printf "fastestmirror=true" >> /etc/dnf/dnf.conf
+    				printf "\nfastestmirror=true" | sudo tee -a /etc/dnf/dnf.conf > /dev/null
 				fi
-				printf "Increased max_parallel_download to 10 and set fastestmirror to true. \n"
+				printf "\n"
+				printf "Increased max_parallel_download to 10 and set fastestmirror to true. \n\n"
 			fi
 			;;
 		"vir")

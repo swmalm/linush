@@ -17,7 +17,7 @@ You may need to add execute permissions:
 chmod +x start.sh
 ```
 # Note
-Linutil should not be run with root at this time
+Linush should not be run with root at this time
 
 # Early version
 ![image](https://github.com/user-attachments/assets/8bd8f1e7-2aac-4e95-802d-0fc2bbb8fd76)
