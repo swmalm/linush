@@ -33,23 +33,23 @@ for line in $art; do
     sleep 0.2
 done
 
-green='\e[0;32m'
-blue='\e[0;34m'
-white='\e[0;37m'
-red='\e[0;31m'
-yellow='\e[1;33m'
+green='\033[0;32m'
+blue='\033[0;34m'
+white='\033[0;37m'
+red='\033[0;31m'
+yellow='\033[1;33m'
 
 packageToInstall(){
 	if [ -x "$(command -v apt-get)" ];then
-		sudo apt-get install -y $@
+		sudo apt-get install -y "$@"
 	elif [ -x "$(command -v dnf)" ];then
-		sudo dnf install -y $@
+		sudo dnf install -y "$@"
 	elif [ -x "$(command -v zypper)" ];then
-		sudo zypper install -y $@
+		sudo zypper install -y "$@"
 	elif [ -x "$(command -v pacman)" ];then
-		sudo pacman -S --noconfirm $@
+		sudo pacman -S --noconfirm "$@"
 	else
-		printf "FAILED TO INSTALL: Package manager not found. Try manually installing: "$@"">&2;
+		printf "FAILED TO INSTALL: Package manager not found. Try manually installing: %s" "$@"
 		read -rp "Press enter to continue..."
 	fi
 }
@@ -57,94 +57,91 @@ packageToInstall(){
 read -rp "Welcome to Linush! Press enter to continue..."
 
 print_help(){
-    printf "${blue}**************************************${white}\n"
+    printf "%b**************************************%b\n" "$blue" "$white"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
-    printf "${blue}--------------------------------------${white}\n\n"
+    printf "%b--------------------------------------%b\n\n" "$blue" "$white"
 
-    printf "${green}NETWORK${white}\n"
-    printf "${red}ni${white} - Network Information\n\n"
+    printf "%bNETWORK%b\n" "$green" "$white"
+    printf "%bni%b - Network Information\n\n" "$red" "$white"
 
-    printf "${green}USER UTILITY${white}\n"
-    printf "${red}ua${white} - Create a new user\n"
-    printf "${red}ul${white} - List all logged in users\n"
-    printf "${red}uv${white} - View users properties\n"
-    printf "${red}um${white} - Modify users properties\n"
-    printf "${red}ud${white} - Delete a user\n\n"
+    printf "%bUSER UTILITY%b\n"  "$green" "$white"
+    printf "%bua%b - Create a new user\n" "$red" "$white"
+    printf "%bul%b - List all logged in users\n" "$red" "$white"
+    printf "%buv%b - View users properties\n" "$red" "$white"
+    printf "%bum%b - Modify users properties\n" "$red" "$white"
+    printf "%bud%b - Delete a user\n\n" "$red" "$white"
 
-    printf "${green}GROUP UTILITY${white}\n"
-    printf "${red}ga${white} - Create a new group\n"
-    printf "${red}gl${white} - List all groups, not system groups\n"
-    printf "${red}gv${white} - List all users in a group\n"
-    printf "${red}gm${white} - Add/Remove user to/from a group\n"
-    printf "${red}gd${white} - Delete group, not system group\n\n"
+    printf "%bGROUP UTILITY%b\n" "$green" "$white"
+    printf "%bga%b - Create a new group\n" "$red" "$white"
+    printf "%bgl%b - List all groups, not system groups\n" "$red" "$white"
+    printf "%bgv%b - List all users in a group\n" "$red" "$white"
+    printf "%bgm%b - Add/Remove user to/from a group\n" "$red" "$white"
+    printf "%bgd%b - Delete group, not system group\n\n" "$red" "$white"
 
-    printf "${green}FOLDER UTILITY${white}\n"
-    printf "${red}fa${white} - Create a folder\n"
-    printf "${red}fl${white} - View content of a folder\n"
-    printf "${red}fv${white} - View folder properties\n"
-    printf "${red}fm${white} - Modify folder properties\n"
-    printf "${red}fd${white} - Delete a folder\n\n"
+    printf "%bFOLDER UTILITY%b\n" "$green" "$white"
+    printf "%bfa%b - Create a folder\n" "$red" "$white"
+    printf "%bfl%b - View content of a folder\n" "$red" "$white"
+    printf "%bfv%b - View folder properties\n" "$red" "$white"
+    printf "%bfm%b - Modify folder properties\n" "$red" "$white"
+    printf "%bfd%b - Delete a folder\n\n" "$red" "$white"
 
-    printf "${green}PACKAGES${white}\n"
-    printf "${red}pkg${white} - Install, Update or Remove packages\n"
-    printf "${red}fast${white} - Fastfetch\n"
-    printf "${red}star${white} - Starship\n"
-    printf "${red}game${white} - Gaming Essentials\n\n"
+    printf "%bPACKAGES%b\n" "$green" "$white"
+    printf "%bpkg%b - Install, Update or Remove packages\n" "$red" "$white"
+    printf "%bfast%b - Fastfetch\n" "$red" "$white"
+    printf "%bstar%b - Starship\n" "$red" "$white"
+    printf "%bgame%b - Gaming Essentials\n\n" "$red" "$white"
 
-    printf "${green}DISTRO SPECIFIC${white}\n"
-    printf "${red}fed${white} - Fedora-based\n"
-    printf "${red}arch${white} - Arch-based\n"
-    printf "${red}deb${white} - Debian-based\n\n"
+    printf "%bDISTRO SPECIFIC%b\n" "$green" "$white"
+    printf "%bfed%b - Fedora-based\n" "$red" "$white"
+    printf "%barch%b - Arch-based\n" "$red" "$white"
+    printf "%bdeb%b - Debian-based\n\n" "$red" "$white"
 
-    printf "${green}SYSTEM${white}\n"
-    printf "${red}firm${white} - Firmware\n"
-    printf "${red}flat${white} - Flatpak\n\n"
+    printf "%bSYSTEM%b\n" "$green" "$white"
+    printf "%bfirm%b - Firmware\n" "$red" "$white"
+    printf "%bflat%b - Flatpak\n\n" "$red" "$white"
 
-    printf "${yellow}ex${white} - Exit the program\n"
+    printf "%bex%b - Exit the program\n" "$yellow" "$white"
 }
 
 fedora(){
-    printf "${blue}**************************************${white}\n"
+    printf "%b**************************************%b\n" "$blue" "$white"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
-    printf "${blue}--------------------------------------${white}\n\n"
-    printf "${green}FEDORA${white}\n"
-    printf "${red}rpm${white} - RPM Fusion\n"
-    printf "${red}dnf${white} - DNF Config\n"
-    printf "${red}zram${white} - Edit zram swap size\n"
-    printf "${red}vmax${white} - Increase vm.max_map_count\n"
-    printf "${red}vir${white} - Virtualization\n"
-    printf "${red}upg${white} - Full System Upgrade\n"
-    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n\n"
+    printf "%b--------------------------------------%b\n\n" "$blue" "$white"
+    printf "%bFEDORA%b\n" "$green" "$white"
+    printf "%brpm%b - RPM Fusion\n" "$red" "$white"
+    printf "%bdnf%b - DNF Config\n" "$red" "$white"
+    printf "%bzram%b - Edit zram swap size\n" "$red" "$white"
+    printf "%bvmax%b - Increase vm.max_map_count\n" "$red" "$white"
+    printf "%bvir%b - Virtualization\n" "$red" "$white"
+    printf "%bupg%b - Full System Upgrade\n" "$red" "$white"
+    printf "%bnvi%b - Install NVIDIA Driver and CUDA\n\n" "$red" "$white"
 }
 
 debian(){
-    printf "${blue}**************************************${white}\n"
+    printf "%b**************************************%b\n" "$blue" "$white"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
-    printf "${blue}--------------------------------------${white}\n\n"
-    printf "${green}DEBIAN${white}\n"
-    printf "${red}nvi${white} - Nvidia Driver\n"
-    printf "${red}vir${white} - Virtualization\n"
-    printf "${red}upt${white} - Full System Upgrade\n\n"
+    printf "%b--------------------------------------%b\n\n" "$blue" "$white"
+    printf "%bDEBIAN%b\n" "$green" "$white"
+    printf "%bnvi%b - Nvidia Driver\n" "$red" "$white"
+    printf "%bvir%b - Virtualization\n" "$red" "$white"
+    printf "%bupt%b - Full System Upgrade\n\n" "$red" "$white"
 }
 
 
 arch(){
-    printf "${blue}**************************************${white}\n"
+    printf "%b**************************************%b\n" "$blue" "$white"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
-    printf "${blue}--------------------------------------${white}\n\n"
-    printf "${green}ARCH${white}\n"
-    printf "${red}nvi${white} - Nvidia Driver\n"
-    printf "${red}upt${white} - Full System Upgrade\n"
-    printf "${red}vir${white} - Virtualization\n\n"
+    printf "%b--------------------------------------%b\n\n" "$blue" "$white"
+    printf "%bARCH%b\n" "$green" "$white"
+    printf "%bnvi%b - Nvidia Driver\n" "$red" "$white"
+    printf "%bupt%b - Full System Upgrade\n" "$red" "$white"
+    printf "%bvir%b - Virtualization\n\n" "$red" "$white"
 }
 
 sysman_logo(){
-    printf "${blue}**************************************${white}\n"
+    printf "%b**************************************%b\n" "$blue" "$white"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
-    printf "${blue}--------------------------------------${white}\n"
-}
-checkUpToDate(){
-	clear
+    printf "%b--------------------------------------%b\n" "$blue" "$white"
 }
 
 checkUpToDate(){
@@ -266,7 +263,7 @@ while true; do
 	"pkg")
 		clear
 		read -rp "Package to install: " pkg_select;
-		packageToInstall $pkg_select
+		packageToInstall "$pkg_select"
 		read -rp "Press enter to continue..."
 		;;
 
@@ -290,13 +287,13 @@ while true; do
 	"flat")
 		clear
 		packageToInstall flatpak
-		if [ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ];then
+		if [[ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ]];then
 			packageToInstall gnome-software-plugin-flatpak
-		elif [ "$XDG_CURRENT_DESKTOP" == *"KDE"* ];then
+		elif [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]];then
 			packageToInstall plasma-discover-backend-flatpak
 		fi
 		flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-		printf "${green}Successfully installed Flathub and added Flathub as repository! ${white}\n\n"
+		printf "%bSuccessfully installed Flathub and added Flathub as repository! %b\n\n" "$green" "$white"
 		read -rp "Press enter to continue..."
 		;;
 
@@ -320,7 +317,7 @@ while true; do
 				mkdir -p "$HOME/AppImages"
 				curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 				sudo flatpak install it.mijorus.gearlever -y
-				printf "${green}Unlock the AppImage and move it to the app menu.${white}\n"
+				printf "%bUnlock the AppImage and move it to the app menu.%b\n" "$green" "$white"
 				flatpak run it.mijorus.gearlever "$HOME/AppImages/heroic_games_launcher.appimage"
 				read -rp "Press enter to continue..."
 			else
@@ -344,7 +341,7 @@ while true; do
 			read -p "Do you want to install RPM Fusion? (y/n) > " -n 1 -r # One letter only
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
-				sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+				sudo dnf install "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 				sudo dnf update @core
 			fi
 			;;
@@ -391,7 +388,6 @@ while true; do
 			read -p "Do you want to increase max_parallel_download and always use the fastest mirror? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-
 				if grep -q "max_parallel_downloads=" /etc/dnf/dnf.conf; then
     				sudo sed -i '/^max_parallel_downloads=/c\max_parallel_downloads=10' /etc/dnf/dnf.conf
 				else
@@ -403,7 +399,6 @@ while true; do
     				printf "\nfastestmirror=true" | sudo tee -a /etc/dnf/dnf.conf > /dev/null
 				fi
 				printf "\n"
-
 				printf "Increased max_parallel_download to 10 and set fastestmirror to true. \n\n"
 			fi
 			;;
@@ -418,7 +413,7 @@ while true; do
 				sudo sed -i 's/^#unix_sock_rw_perms = "0770".*/unix_sock_rw_perms = "0770"/' /etc/libvirt/libvirtd.conf
 				sudo systemctl start libvirtd
 				sudo systemctl enable libvirtd
-				sudo usermod -a -G libvirt $(whoami)
+				sudo usermod -a -G libvirt "$(whoami)"
 			fi
 			;;
 		"upg")
@@ -456,13 +451,13 @@ while true; do
 				printf "\n"
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
 					driverInstalled=$(nvidia-smi | grep -o "Driver Version")
-					if [[ driverInstalled ]]; then
+					if [[ $driverInstalled ]]; then
 						printf "Nvidia drivers already installed.\n"
 					else
 						if [[ "$(cat /etc/*-release)" =~ bookworm ]]; then
 							printf "${yellow}Installing...${white}\n"
 							packageToInstall linux-headers-amd64
-							echo "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
+							printf "deb http://deb.debian.org/debian/ bookworm main contrib non-free non-free-firmware" | sudo tee -a /etc/apt/sources.list
 							sudo apt-get update -y
 							packageToInstall nvidia-driver firmware-misc-nonfree -y
 							printf "Installation complete. For the drivers to be applied you need to reboot.\n"
@@ -474,7 +469,7 @@ while true; do
 						if [[ "$(cat /etc/*-release)" =~ bullseye ]]; then
 							printf "${yellow}Installing...${white}\n"
 							packageToInstall linux-headers-amd64
-							echo "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
+							printf "deb http://deb.debian.org/debian/ bullseye main contrib non-free" | sudo tee -a /etc/apt/sources.list
 							sudo apt-get update
 							packageToInstall nvidia-driver firmware-misc-nonfree
 							printf "${yellow}Installation complete. For the drivers to be applied you need to reboot.\n${white}"
@@ -502,7 +497,7 @@ while true; do
 			read -p "Do you want to check for system compatibility and install the nvidia driver? (y/n) > " -n 1 -r
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				if [[ $(lspci | grep VGA | grep NVIDIA) && $(cat /etc/*-release) =~ "Arch" ]]; then
+				if lspci | grep -q "VGA" | grep -q "NVIDIA" && grep -q "Arch" /etc/*-release; then
 					gpu_model=$(lspci | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
 					if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
 						cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
@@ -533,7 +528,7 @@ while true; do
 							return
 						fi
 						if [[ "$cpu_model" -ge 11 ]]; then
-							if [[ ! $(grep -w ibt=off /etc/default/grub) ]]; then
+							if ! grep -qw "ibt=off" /etc/default/grub; then
 								sudo sed -i 's/^\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 ibt=off"/' /etc/default/grub
 								sudo grub-mkconfig -o /boot/grub/grub.cfg
 							else
@@ -567,7 +562,7 @@ while true; do
 
 	# If the selection is invalid
 	*)
-        printf "ERROR... [Invalid Selection: '$selection'] \n\n"
+        printf "ERROR... [Invalid Selection: '%s'] \n\n" "$selection"
 		read -rp "Press enter to continue..."
         ;;		
 esac
