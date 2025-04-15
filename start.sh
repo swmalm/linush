@@ -116,7 +116,7 @@ fedora(){
     printf "${red}vmax${white} - Increase vm.max_map_count\n"
     printf "${red}vir${white} - Virtualization\n"
     printf "${red}upg${white} - Full System Upgrade\n"
-    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n"
+    printf "${red}nvi${white} - Install NVIDIA Driver and CUDA\n\n"
 }
 
 debian(){
@@ -126,7 +126,7 @@ debian(){
     printf "${green}DEBIAN${white}\n"
     printf "${red}nvi${white} - Nvidia Driver\n"
     printf "${red}vir${white} - Virtualization\n"
-    printf "${red}upt${white} - Full System Upgrade\n"
+    printf "${red}upt${white} - Full System Upgrade\n\n"
 }
 
 
@@ -137,13 +137,16 @@ arch(){
     printf "${green}ARCH${white}\n"
     printf "${red}nvi${white} - Nvidia Driver\n"
     printf "${red}upt${white} - Full System Upgrade\n"
-    printf "${red}vir${white} - Virtualization\n"
+    printf "${red}vir${white} - Virtualization\n\n"
 }
 
 sysman_logo(){
     printf "${blue}**************************************${white}\n"
     printf "     SYSTEM MANAGER (v0.1-rewrite)     \n"
     printf "${blue}--------------------------------------${white}\n"
+}
+checkUpToDate(){
+	clear
 }
 
 while true; do
@@ -387,15 +390,16 @@ while true; do
 			printf "\n"
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				if grep -q "max_parallel_downloads" /etc/dnf/dnf.conf; then
-    				sudo sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' /etc/dnf/dnf.conf
+    				sudo sed -i '/^max_parallel_downloads=/c\max_parallel_downloads=10' /etc/dnf/dnf.conf
 				else
-    				printf "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+    				printf "\nmax_parallel_downloads=10" | sudo tee -a /etc/dnf/dnf.conf > /dev/null
 				fi
 				if grep -q "fastestmirror" /etc/dnf/dnf.conf; then
     				sudo sed -i 's/^fastestmirror=.*/fastestmirror=true/' /etc/dnf/dnf.conf
 				else
-    				printf "fastestmirror=true" >> /etc/dnf/dnf.conf
+    				printf "\nfastestmirror=true" | sudo tee -a /etc/dnf/dnf.conf > /dev/null
 				fi
+				printf "\n"
 				printf "Increased max_parallel_download to 10 and set fastestmirror to true. \n"
 			fi
 			;;
