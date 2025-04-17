@@ -54,6 +54,22 @@ packageToInstall(){
 	fi
 }
 
+packageToRemove(){
+	if [ -x "$(command -v apt-get)" ];then
+		sudo apt-get remove --purge -y "$@"
+		sudo apt-get autoremove -y
+	elif [ -x "$(command -v dnf)" ];then
+		sudo dnf remove -y "$@"
+	elif [ -x "$(command -v zypper)" ];then
+		sudo zypper remove -y "$@"
+	elif [ -x "$(command -v pacman)" ];then
+		sudo pacman -Rns --noconfirm "$@"
+	else
+		printf "FAILED TO REMOVE: Package manager not found. Try manually uninstalling: %s" "$@"
+		read -rp "Press enter to continue..."
+	fi
+}
+
 read -rp "Welcome to Linush! Press enter to continue..."
 
 print_help(){
@@ -98,7 +114,8 @@ print_help(){
 
     printf "%bSYSTEM%b\n" "$green" "$white"
     printf "%bfirm%b - Firmware\n" "$red" "$white"
-    printf "%bflat%b - Flatpak\n\n" "$red" "$white"
+    printf "%bflat%b - Flatpak\n" "$red" "$white"
+	printf "%bsnap%b - Snap Removal\n\n" "$red" "$white"
 
     printf "%bex%b - Exit the program\n" "$yellow" "$white"
 }
@@ -558,6 +575,32 @@ while true; do
 
 	"firm")
 		clear
+		printf "
+		aaaa\naaaa
+		"
+		read -rp "Press enter to continue..."
+		;;
+
+	"snap")
+		clear
+		printf "Snaps, or snap packages were developed by Canonical, the Ubuntu people, \n\
+to try and solve the problem of applications on Linux not always using the same version of dependencies. \n\n\
+One of the solutions was to have a packaging format that would bundle the required dependencies with the app and \n\
+therefore not worry about what the system was using, which also made the package universal and more isolated. \n\n\
+However, Snaps are known for being slower to launch, less efficient with disk space, and being tightly controlled by Canonical.\n\
+Flatpak is preferred by some because it offers similar benefits with better performance,\n\
+more transparency, and broader community support.\n\n"
+		read -p "Do you want to disable and uninstall your snaps? We can reinstall the flatpak version for you later. (y/n) > " -n 1 -r
+		printf "\n"
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			if [ -x "$(command -v snap)" ]; then
+				packageToRemove snapd
+				if [ ! -x "$(command -v snap)" ]; then
+					printf "SUCCESS!"
+				fi
+				read -rp "Press enter to continue..."
+			fi
+		fi
 		;;
 
 	# If the selection is invalid
