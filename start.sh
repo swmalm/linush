@@ -220,6 +220,10 @@ while true; do
 	# Lists all users, not including system users
 	"ul")
 		clear
+		sysman_logo
+		printf "%b	   	USERS		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
 		read -rp "Press enter to continue..."
 		;;
 
@@ -230,7 +234,7 @@ while true; do
 		printf "%b	   USER PROPERTIES		%b\n\n" "$green" "$white"
 		printf "Users:\n"
 		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
-		read -rp "Select user: " usern
+		read -rp "Enter user: " usern
 		printf "\n"
 		if [ "$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)" == "$usern" ];then
 			printf "User ID: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $3}')%b\n" "$yellow" "$white"
@@ -238,9 +242,9 @@ while true; do
 			printf "Comment: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $5}')%b\n" "$yellow" "$white"
 			printf "Home Directory: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $6}')%b\n" "$yellow" "$white"
 			printf "Shell Directory: %b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $7}')%b\n" "$yellow" "$white"
-			printf "Groups: %b$(groups "$usern" | awk -F ":" '{print $2}')%b\n\n" "$yellow" "$white"
+			printf "Groups:%b$(groups "$usern" | awk -F ":" '{print $2}')%b\n\n" "$yellow" "$white"
 		else
-			printf "%bERROR: USER '%b' NOT FOUND!%b\n\n" "$red" "$usern" "$white"
+			printf "%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
 		fi
 		read -rp "Press enter to continue..."
 		;;
@@ -248,6 +252,23 @@ while true; do
 	# Delete user
 	"ud")
 		clear
+		sysman_logo
+		printf "%b	    DELETE USER		%b\n\n" "$red" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then # Checks if user exists and output goes to null
+			printf "\n"
+			read -p "Are you sure you want to delete the user ""$usern""? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then 
+				sudo userdel --remove "$usern" 2>/dev/null
+				printf "\n\n%bUser%b: '%b' %bdeleted successfully!%b\n\n" "$green" "$white" "$usern" "$green" "$white"
+			else
+				printf "\n\n%bUser%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
@@ -260,12 +281,32 @@ while true; do
 	# Create group
 	"ga")
 		clear
+		sysman_logo
+		printf "%b	    CREATE GROUP		%b\n\n" "$yellow" "$white"
+		read -rp "Enter name of new group: " group
+		groups=$(getent group "$group" | cut -d ":" -f 1)
+		if [[ "$groups" == "$group" ]]; then
+			printf "\n%bERROR: GROUP %b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+		else
+			printf "\n%bCreating group%b: '%b'\n\n" "$green" "$white" "$group"
+			read -p "Is this correct? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo addgroup "$group" 2>/dev/null
+				printf "\n\n%bGroup%b: '%b' %bwas created successfully!%b\n\n" "$green" "$white" "$group" "$green" "$white"
+			else
+				printf "\n\n%bGroup%b: '%b' %bwas not created!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			fi
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Lists all user groups
 	"gl")
 		clear
+		sysman_logo
+		printf "%b		GROUPS		%b\n\n" "$green" "$white"
+		printf "Groups:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
 		read -rp "Press enter to continue..."
 		;;
 
@@ -284,6 +325,22 @@ while true; do
 	# Delete group
 	"gd")
 		clear
+		sysman_logo
+		printf "%b	    DELETE GROUP		%b\n\n" "$yellow" "$white"
+		read -rp "Enter name of the group: " group
+		groups=$(getent group "$group" | cut -d ":" -f 1)
+		if [[ "$groups" == "$group" ]]; then
+			printf "\n%bDeleting group%b: '%b'\n\n" "$green" "$white" "$group"
+			read -p "Are you sure? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				#sudo delgroup "$group" 2>/dev/null
+				printf "\n\n%bGroup%b: '%b' %bwas deleted successfully!%b\n\n" "$green" "$white" "$group" "$green" "$white"
+			else
+				printf "\n\n%bGroup%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: GROUP %b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 	
@@ -557,7 +614,7 @@ while true; do
 				if lspci | grep -q "VGA" | grep -q "NVIDIA" && grep -q "Arch" /etc/*-release; then
 					gpu_model=$(lspci | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
 					if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
-						cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
+						cpu_model=$(grep "model name" /proc/cpuinfo | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2) # Removed useless cat
 						kernel=$(pacman -Q | grep -E '^linux(| |-lts)[^-headers]' | cut -d ' ' -f 1)
 						header="${kernel}-headers"
 						if [[ "$kernel" = "linux" ]]; then
