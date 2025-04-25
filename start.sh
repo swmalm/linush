@@ -160,6 +160,28 @@ while true; do
 	# Network Info
     "ni")
 		clear
+		sysman_logo
+		printf "%b	 NETWORK INFORMATION		%b\n\n" "$yellow" "$white"
+		printf "%bHostname: %b%b\n\n" "$blue" "$white" "$(hostname)"
+		for interfaces in $(ip -br addr show | grep -v 'lo' | awk '{print $1}'); do # Loops each interface and grabs ips, mac and status with checks for up/down and not found.
+			printf "%bInterface: %b%b\n" "$green" "$white" "$interfaces"
+			if [[ "$(ip addr show "$interfaces" | grep 'inet' | grep -v ":" | awk '{print $2}')" ]];then
+				printf "%bIP Address:%b $(ip addr show "$interfaces" | grep 'inet' | grep -v ":" | awk '{print $2}' | cut -d "/" -f 1)\n" "$green" "$white"
+			else
+				printf "%bIP Address:%b <Not Found>%b\n" "$green" "$red" "$white"
+			fi
+			if [[ "$(ip r | grep default | grep "$interfaces" | awk '{print $3}')" ]];then
+				printf "%bGateway:%b $(ip r | grep default | grep "$interfaces" | awk '{print $3}')\n" "$green" "$white"
+			else
+				printf "%bGateway:%b <Not Found>%b\n" "$green" "$red" "$white"
+			fi
+			printf "%bMAC:%b $(ip addr show "$interfaces" | grep 'link/' | awk '{print $2}')\n" "$green" "$white"
+			if [[ "$(ip link show "$interfaces" | awk '{print $9}')" == "UP" ]];then
+				printf "Status: %b$(ip link show "$interfaces" | awk '{print $9}')%b\n\n" "$green" "$white"
+			else
+				printf "Status: %b$(ip link show "$interfaces" | awk '{print $9}')%b\n\n" "$red" "$white"
+			fi
+		done
         read -rp "Press enter to continue..."
         ;;
 
@@ -173,6 +195,25 @@ while true; do
 	# Create user
 	"ua")
 		clear
+		sysman_logo
+		printf "%b	   CREATE NEW USER		%b\n\n" "$green" "$white"
+		read -rp "Enter the username: " usern
+
+		if ! echo "$usern" | grep '^[a-zA-Z]*$' > /dev/null; then
+			printf "%bERROR: USERNAME CAN NOT CONTAIN SPACES OR NUMBERS.%b" "$red" "$white"
+		else
+			read -rsp "Enter the password: " passw
+			printf "\n"
+			read -rsp "Enter the password again: " passw_check
+			printf "\n"
+			if [ "$passw" != "$passw_check" ];then
+				printf "\n%bERROR: NOT MATCHING PASSWORDS!%b\n\n" "$red" "$white"
+			else
+				sudo useradd -m "$usern" -g users -s /bin/bash
+				echo "$usern:$passw" | sudo chpasswd
+				printf "\n%bUser%b: %b%b%b was created successfully!\n\n" "$green" "$white" "$blue" "$usern" "$white"  
+			fi
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
@@ -185,6 +226,22 @@ while true; do
 	# View user properties
 	"uv")
 		clear
+		sysman_logo
+		printf "%b	   USER PROPERTIES		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Select user: " usern
+		printf "\n"
+		if [ "$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)" == "$usern" ];then
+			printf "User ID: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $3}')%b\n" "$yellow" "$white"
+			printf "Group ID: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $4}')%b\n" "$yellow" "$white"
+			printf "Comment: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $5}')%b\n" "$yellow" "$white"
+			printf "Home Directory: %b$(grep -w "^$usern" /etc/passwd | awk -F ":" '{print $6}')%b\n" "$yellow" "$white"
+			printf "Shell Directory: %b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $7}')%b\n" "$yellow" "$white"
+			printf "Groups: %b$(groups "$usern" | awk -F ":" '{print $2}')%b\n\n" "$yellow" "$white"
+		else
+			printf "%bERROR: USER '%b' NOT FOUND!%b\n\n" "$red" "$usern" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
