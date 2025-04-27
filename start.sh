@@ -275,6 +275,139 @@ while true; do
 	# Modify user properties
 	"um")
 		clear
+		sysman_logo
+		printf "%b	    USER MODIFICATION		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then
+			printf "%b%b%b$(id -u "^$usern")" "$green" "\nUser ID: " "$white"
+			printf "%b%b%b$(id -g "^$usern")" "$green" "\nGroup ID: " "$white"
+			printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $5}')" "$green" "\nComment: " "$white"
+			printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $6}')" "$green" "\nHome Directory: " "$white"
+			printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $7}')" "$green" "\nShell Directory: " "$white"
+			printf "%b%b%b$(groups "$usern" | awk -F ":" '{print $2}')" "$green" "\nGroups:" "$white"
+			printf "\n\n"
+			printf "What property would you like to modify?\n\n"
+			printf  "%bPASSWORD%b | %bUSERNAME%b | %bGROUP%b | %bUSERID%b | %bGROUPID%b | %bCOMMENT%b | %bHOME%b | %bSHELL%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			read -rp "> " modifier
+			printf "\n"
+			case "$modifier" in 
+				"password" | "PASSWORD")
+					passwd "$usern"
+					;;
+				"username" | "USERNAME")
+					printf "Current username: %b%b%b\n\n" "$yellow" "$usern" "$white"
+					read -rp "Enter new username: " new_usern
+					printf "\n"
+					read -p "Are you sure you want to change the username to '$new_usern'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -l "$new_usern" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW USERNAME: %b'%b'\n\n" "$green" "$white" "$new_usern"
+						else
+							printf "\n\n%bERROR: USERNAME %b'%b'%b WAS NOT CHANGED, TRY ANOTHER USERNAME!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: USERNAME %b'%b'%b WAS NOT CHANGED!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white"
+					fi
+					;;
+				"group" | "GROUP")
+					printf "Current default group: %b$(id -gn "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new default group: " new_grp
+					printf "\n"
+					read -p "Are you sure you want to change the primary group to '$new_grp'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -g "$new_grp" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW DEFAULT GROUP: %b'%b'\n\n" "$green" "$white" "$new_grp"
+						else
+							printf "\n\n%bERROR: DEFAULT GROUP WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$new_grp" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: DEFAULT GROUP WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$new_grp" "$yellow" "$white"
+					fi
+					;;
+				"userid" | "USERID")
+					printf "Current User ID: %b$(id -u "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new user id: " new_uid
+					printf "\n"
+					read -p "Are you sure you want to change the user id to '$new_uid'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -u "$new_uid" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW USER ID: %b'%b'\n\n" "$green" "$white" "$new_uid"
+						else
+							printf "\n\n%bERROR: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_uid" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_uid" "$yellow" "$white"
+					fi
+					;;
+				"groupid" | "GROUPID")
+					printf "Current Group ID: %b$(id -g "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new group id: " new_gid
+					printf "\n"
+					read -p "Are you sure you want to change the group id to '$new_gid'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -u "$new_gid" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW USER ID: %b'%b'\n\n" "$green" "$white" "$new_gid"
+						else
+							printf "\n\n%bERROR: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_gid" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_gid" "$yellow" "$white"
+					fi
+					;;
+				"comment" | "COMMENT")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $5}')" "$green" "\nCurrent Comment: " "$white"
+					read -rp "Enter new comment: " new_com
+					printf "\n"
+					read -p "Are you sure you want to change the comment to '$new_com'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -c "$new_com" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW COMMENT: %b'%b'\n\n" "$green" "$white" "$new_com"
+						else
+							printf "\n\n%bERROR: COMMENT FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_com" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: COMMENT FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_com" "$yellow" "$white"
+					fi
+					;;
+				"home" | "HOME")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $6}')" "$green" "\nCurrent Home Directory: " "$white"
+					read -rp "Enter new home directory: /home/" new_home
+					printf "\n"
+					read -p "Are you sure you want to change the home directory to '/home/$new_home'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -d "/home/$new_home" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW HOME DIRECTORY: %b'/home/%b'\n\n" "$green" "$white" "$new_home"
+						else
+							printf "\n\n%bERROR: HOME DIRECTORY FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_home" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: HOME DIRECTORY FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_home" "$yellow" "$white"
+					fi
+					;;
+				"shell" | "SHELL")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $7}')" "$green" "\nCurrent Shell Directory: " "$white"
+					read -rp "Enter new shell: /bin/" new_sh
+					printf "\n"
+					read -p "Are you sure you want to change the shell to '/bin/$new_sh'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if usermod -s "/bin/$new_sh" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW SHELL: %b'/bin/%b'\n\n" "$green" "$white" "$new_sh"
+						else
+							printf "\n\n%bERROR: SHELL FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_sh" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: SHELL FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_sh" "$yellow" "$white"
+					fi
+					;;
+				*)
+				    printf "%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$modifier"
+					;;
+			esac
+		else
+			printf "\n%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
@@ -333,7 +466,7 @@ while true; do
 			printf "\n%bDeleting group%b: '%b'\n\n" "$green" "$white" "$group"
 			read -p "Are you sure? (y/n) > " -n 1 -r
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				#sudo delgroup "$group" 2>/dev/null
+				sudo delgroup "$group" 2>/dev/null
 				printf "\n\n%bGroup%b: '%b' %bwas deleted successfully!%b\n\n" "$green" "$white" "$group" "$green" "$white"
 			else
 				printf "\n\n%bGroup%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$group" "$red" "$white"
@@ -672,6 +805,29 @@ while true; do
 
 	"firm")
 		clear
+		sysman_logo
+		printf "%b	 FIRMWARE UPDATER		%b\n\n" "$green" "$white"
+		printf "%bfwupd%b is a simple daemon to allow session software to update device firmware on your local machine.\n\n" "$yellow" "$white"
+		if mokutil --sb-state | grep -q 'SecureBoot enabled'; then
+			printf "SecureBoot is enabled, it's not recommend to update firmware within Linush for SecureBoot-enabled systems.\n\n"
+		else
+			read -p "Do you want to check for system firmware updates and install them if found? (y/n) > " -n 1 -r
+			printf "\n\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				if [ -x "$(command -v fwupdmgr)" ];then
+					printf "%bfwupd%b is already installed...\n\n" "$yellow" "$white"
+				else
+					packageToInstall fwupd
+				fi
+				fwupdmgr refresh --force
+				fwupdmgr get-updates
+				fwupdmgr update
+				printf "\n"
+			else
+				printf "%bNot updating firmware...%b" "$red" "$white"
+			fi
+		fi
+		read -rp "Press enter to continue..."
 		;;
 
 	# If the selection is invalid
