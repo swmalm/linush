@@ -186,7 +186,7 @@ while true; do
         ;;
 
 	# Exit program
-    "ex")
+    "ex"|"exit")
 		clear
         printf "Quitting...";
         exit 0
@@ -539,30 +539,257 @@ while true; do
 	# Create folder
 	"fa")
 		clear
+		sysman_logo
+		printf "%b	   CREATE NEW FOLDER		%b\n\n" "$green" "$white"
+		read -rp "Enter folder name: " folder
+		printf "\n"
+		read -rp "Enter folder's parent directory in absolute path: " folder_path
+		folder_path="${folder_path//\'/}"
+		if [[ -d "$folder_path" ]]; then
+			if [[ ! -d "$folder_path/$folder" ]]; then
+				mkdir "$folder_path/$folder"
+				printf "\n%bSUCCESS! Folder %b'%b'%b was created successfully!%b\n\n" "$green" "$white" "$folder" "$green" "$white"
+			else
+				printf "\n%bERROR: FOLDER%b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: PARENT DIRECTORY %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder_path" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# View content of folder
 	"fl")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER CONTENTS		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path: " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nPATH: %b%s%b\n\n" "$blue" "$folder" "$white"
+			printf "%bContents of folder:%b\n" "$red" "$white"
+			for file in "$folder"/*; do
+				if [[ -d "$file" ]]; then
+					printf "%b%s%b\n" "$green" "$(basename "$file")" "$white"
+				elif [[ -f "$file" ]]; then
+					printf "%b%s%b\n" "$yellow" "$(basename "$file")" "$white"
+				else
+					printf "%b%s%b\n" "$red" "$(basename "$file")" "$white"
+				fi
+			done
+			printf "\n"
+		else
+			printf "\n%bERROR: FOLDER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# View folder properties
 	"fv")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER PROPERTIES		%b\n\n" "$green" "$white"
+		read -rp "Enter folder's absolute path: " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nPATH: %b%s%b\n\n" "$blue" "$folder" "$white"
+			printf "Owner: %b%s%b\n" "$blue" "$(stat -c '%U' "$folder")" "$white"
+			printf "Group: %b%s%b\n\n" "$blue" "$(stat -c '%G' "$folder")" "$white"
+			printf "Permissions: %b%s%b\n" "$blue" "$(stat -c '%A' "$folder")" "$white"
+			perm_string="$(stat -c '%a' "$folder")"
+			octal="${perm_string: -3}"
+			perm_list=""
+			for (( i = 1; i <= 3; i++ )); do
+				perm_number="${octal:i-1:1}"
+				case $i in
+					1) perm_list+="Owner: ";;
+					2) perm_list+="Group: ";;
+					3) perm_list+="Others: ";;
+				esac
+				case $perm_number in
+					"7") perm_list+="Read, Write & Execute\n";;
+					"6") perm_list+="Read & Write\n";;
+					"5") perm_list+="Read & Execute\n";;        
+					"4") perm_list+="Read\n";;
+					"3") perm_list+="Write & Execute\n";;
+					"2") perm_list+="Write\n";;
+					"1") perm_list+="Execute\n";;
+					"0") perm_list+="No permissions\n";;
+				esac
+			done
+			printf "%b" "$perm_list"
+			perm_sgid="$(stat -c '%A' "$folder" | cut -c 10)"
+			perms_stick="$(stat -c '%A' "$folder" | cut -c 7)"
+			if [[ "$perm_sgid" == "s" ]]; then
+				printf "SGID: %bYES%b\n" "$green" "$white"
+			else
+				printf "SGID: %bNO%b\n" "$red" "$white"
+			fi
+			if [[ "$perms_stick" == "t" ]]; then
+				printf "Sticky bit: %bYES%b\n" "$green" "$white"
+			else
+				printf "Sticky bit: %bNO%b\n" "$red" "$white"
+			fi
+			printf "\nCreated: %b%s%b\n" "$blue" "$(stat -c '%w' "$folder")" "$white"
+			printf "Last modified: %b%s%b\n" "$blue" "$(stat -c '%y' "$folder")" "$white"
+			printf "Last accessed: %b%s%b\n\n" "$blue" "$(stat -c '%x' "$folder")" "$white"
+		else
+			printf "\n%bERROR: FOLDER %b%b%b WAS NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# Modify folder properties
 	"fm")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER MODIFICATION		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path: " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nWhich property would you like to modify?\n\n"
+			printf  "%bOWNER%b | %bGROUP%b | %bPERMISSIONS%b | %bSTICKY BIT%b | %bSETGID%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			read -rp "> " modifier
+			case $modifier in
+			"owner"|"OWNER")
+				printf "\nCurrent owner: %b%s%b\n\n" "$yellow" "$(stat -c '%U' "$folder")" "$white"
+				read -rp "Enter new owner: " new_owner
+				printf "\n"
+				read -p "Are you sure you want to change the owner to '$new_owner'? (y/n) > " -n 1 -r
+				printf "\n\n"
+				chown -v "$new_owner" "$folder"
+				printf "\n"
+				;;
+			"group"|"GROUP")
+				printf "\nCurrent group: %b%s%b\n\n" "$yellow" "$(stat -c '%G' "$folder")" "$white"
+				read -rp "Enter new group: " new_group
+				printf "\n"
+				read -p "Are you sure you want to change the group to '$new_group'? (y/n) > " -n 1 -r
+				printf "\n\n"
+				chgrp -v "$new_group" "$folder"
+				printf "\n"
+				;;
+			
+			"permissions"|"PERMISSIONS")
+				printf "\nWhat permissions would you like to change?\n\n"
+				printf "%b(R)ead%b | %b(W)rite%b | %bE(X)ecute%b | %b(A)ll%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+				read -rp "> " -n 1 perm_select	
+				perm_select="${perm_select,,}"
+				if [[ $perm_select == "a" || $perm_select == "A" ]]; then
+					printf "\n\nWho's permissions would you like to change?\n"
+					printf "\n%b(U)ser Owner%b | %b(G)roup%b | %b(O)ther%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+					read -rp "> " -n 1 who_select
+					who_select="${who_select,,}"
+					if [[ $who_select == "u" || $who_select == "U" ]]; then
+						if chmod u+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! OWNER PERMISSIONS ADDED TO: %b'%b\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: OWNER PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					elif [[ $who_select == "g" || $who_select == "G" ]]; then
+						if chmod g+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! GROUP PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: GROUP PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					elif [[ $who_select == "o" || $who_select == "O" ]]; then
+						if chmod o+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! OTHERS PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: OTHERS PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$who_select"
+					fi
+				elif [[ $perm_select == "r" || $perm_select == "R" || $perm_select == "w" || $perm_select == "W" || $perm_select == "x" || $perm_select == "X" ]]; then
+					printf "\n\nWho's permissions do you want to change?\n\n"
+					printf "%b(U)ser Owner%b | %b(G)roup%b | %b(O)ther%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+					read -rp "> " -n 1 who_select
+					who_select="${who_select,,}"
+					printf "\n\nDo you want to (add) or (remove) permission: '%b'?\n\n" "$perm_select"
+					read -rp "> " add_or_remove
+					add_or_remove="${add_or_remove,,}"
+					if [[ $add_or_remove == "add" ]]; then
+						if chmod "$who_select"+"$perm_select" "$folder"; then
+							printf "\n%bSUCCESS! %b'%b'%b PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder" "$green" "$white" "$perm_select"
+						else
+							printf "\n%bERROR: %b'%b'%b PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white" "$perm_select" "$red" "$white"
+						fi
+					elif [[ $add_or_remove == "remove" ]]; then
+						if chmod "$who_select"-"$perm_select" "$folder"; then
+							printf "\n%bSUCCESS! %b'%b'%b PERMISSIONS REMOVED FROM: %b'%b'\n\n" "$green" "$white" "$folder" "$green" "$white" "$perm_select"
+						else
+							printf "\n%bERROR: %b'%b'%b PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white" "$perm_select" "$red" "$white"
+						fi
+					else
+						printf "\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$add_or_remove"
+					fi
+				else
+					printf "\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$perm_select"
+				fi
+				;;
+			"sticky bit"|"STICKY BIT")
+				printf "\nSticky bit: %b%s%b\n\n" "$yellow" "$(stat -c '%A' "$folder" | grep -q '[tT]$' && echo enabled || echo disabled)" "$white"
+				read -p "Do you want to enable or disable the sticky bit? (e/d) > " -n 1 -r
+				if [[ $REPLY =~ ^[Ee]$ ]]; then
+					if chmod +t "$folder"; then
+						printf "\n\n%bSUCCESS! STICKY BIT ENABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: STICKY BIT %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				elif [[ $REPLY =~ ^[Dd]$ ]];then
+					if chmod -t "$folder";then
+						printf "\n\n%bSUCCESS! STICKY BIT DISABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: STICKY BIT %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				else
+					printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$REPLY"
+				fi
+				;;
+			"setgid"|"SETGID")
+				printf "\nSGID bit: %b%s%b\n\n" "$yellow" "$( [[ $(stat -c '%A' "$folder") =~ [sS] ]] && echo enabled || echo disabled )" "$white"
+				read -p "Do you want to enable or disable the setgid? (e/d) > " -n 1 -r
+				if [[ $REPLY =~ ^[Ee]$ ]]; then
+					if chmod g+s "$folder"; then
+						printf "\n\n%bSUCCESS! SETGID ENABlED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: SETGID %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				elif [[ $REPLY =~ ^[Dd]$ ]]; then
+					if chmod g-s "$folder"; then
+						printf "\n\n%bSUCCESS! SETGID DISABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: SETGID %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				else
+					printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$REPLY"
+				fi
+				;;
+			esac
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Delete folder
 	"fd")
 		clear
+		sysman_logo
+		printf "%b	    DELETE FOLDER		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path: " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nDeleting folder: %b'%b'%b\n\n" "$green" "$folder" "$white"
+			read -p "Are you sure? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo rm -rf "$folder"
+				printf "\n\n%bFolder%b: '%b' %bwas deleted successfully!%b\n\n" "$green" "$white" "$folder" "$green" "$white"
+			else
+				printf "\n\n%bFolder%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: FOLDER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
