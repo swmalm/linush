@@ -446,12 +446,71 @@ while true; do
 	# View specifed group
 	"gv")
 		clear
+		sysman_logo
+		printf "%b	    GROUP VIEW		%b\n\n" "$green" "$white"
+		printf "Groups:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
+		read -rp "Enter group: " group
+		if ! getent group "$group" > /dev/null; then
+			printf "%bGroup '%s' not found.%b\n" "$red" "$group" "$white"
+		else
+			group_info=$(getent group "$group")
+			IFS=':' read -r group group_pw group_gid group_members <<< "$group_info"
+
+			printf "\nName: %b%s%b\n" "$blue" "$group" "$white"
+			printf "Password (x = empty): %b%s%b\n" "$blue" "$group_pw" "$white"
+			printf "GID: %b%s%b\n" "$blue" "$group_gid" "$white"
+			printf "Members: %b%s%b\n" "$blue" "$group_members" "$white"
+			
+			num_members=$(getent group "$group" | awk -F '[,:]' '{ print NF - 3 }' | sort -k2,2n)
+			printf "Size (Members count): %b%s%b\n\n" "$blue" "$num_members" "$white"
+		fi
+		printf ""
 		read -rp "Press enter to continue..."
 		;;
 	
 	# Add/Remove user from group
 	"gm")
 		clear
+		sysman_logo
+		printf "%b	    ADD/REMOVE USER FROM GROUP		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then
+			clear
+			sysman_logo
+			printf "%b	    ADD/REMOVE USER FROM GROUP		%b\n\n" "$green" "$white"
+			printf "Groups:\n"
+			printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
+			read -rp "Enter group: " group
+			if getent group "$group" > /dev/null 2>&1; then
+				printf "User selected: %b" "$usern"
+				printf "Group selected: %b" "$group"
+				printf "Do you want to (add) or (remove) %b from %b?" "$usern" "$group"
+				read -rp "> " add_or_remove
+				printf "\n"
+				if [[ "$add_or_remove" == "add" ]]; then
+					if usermod -aG "$usern" "$group"; then
+						printf "\n\n%bSUCCESS! USER: %b'%b'%b HAS BEEN ADDED TO %b'%b'\n\n" "$green" "$white" "$usern" "$green" "$group" "$white"
+					else
+						printf "\n\n%bINFO: USER %b'%b'%b WAS NOT ADDED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$group" "$yellow" "$white"
+					fi
+				elif [[ "$add_or_remove" == "remove" ]]; then
+					if gpasswd -d "$usern" "$group"; then
+						printf "\n\n%bSUCCESS! USER: %b'%b'%b HAS BEEN REMOVED FROM %b'%b'\n\n" "$green" "$white" "$usern" "$green" "$group" "$white"
+					else
+						printf "\n\n%bINFO: USER %b'%b'%b WAS NOT REMOVED FROM %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$group" "$yellow" "$white"
+					fi
+				else
+					printf "ERROR... [Invalid Selection: '%s'] \n\n" "$add_or_remove"		
+				fi
+			else
+				printf "%bERROR: GROUP %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			fi
+		else
+			printf "%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 	
