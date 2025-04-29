@@ -54,6 +54,24 @@ packageToInstall(){
 	fi
 }
 
+packageToRemove(){
+	if [ -x "$(command -v snap)" ];then
+		if [ -x "$(command -v apt-get)" ];then
+			sudo apt-get remove --purge -y "$@" && sudo apt-get autoremove -y
+		elif [ -x "$(command -v dnf)" ];then
+			sudo dnf remove -y "$@"
+		elif [ -x "$(command -v zypper)" ];then
+			sudo dnf remove -y "$@"
+		elif [ -x "$(command -v pacman)" ];then
+			sudo pacman -Rns "$@" --noconfirm
+		else
+			printf "%bERROR: UNSUPPORTED PACKAGE MANAGER: '%b'%b" "$red" "$@" "$white"
+		fi
+	else
+		printf "%bINFO: '%b' IS NOT INSTALLLED!%b" "$yellow" "$@" "$yellow"
+	fi
+}
+
 read -rp "Welcome to Linush! Press enter to continue..."
 
 print_help(){
@@ -1123,7 +1141,36 @@ while true; do
 		fi
 		read -rp "Press enter to continue..."
 		;;
+	"snap")
+		clear
+		sysman_logo
+		printf "%b\n" "Snaps, or snap packages were developed by Canonical, the Ubuntu people,
+to try and solve the problem of applications on Linux not always using the same version of dependencies.
 
+One of the solutions was to have a packaging format that would bundle the required dependencies with the app and
+therefore not worry about what the system was using, which also made the package universal and more isolated.
+
+However, Snaps are known for being slower to launch, less efficient with disk space, and being tightly controlled by Canonical.
+Flatpak is preferred by some because it offers similar benefits with better performance,
+more transparency, and broader community support.\n"
+		read -p "Do you want to disable and uninstall your snaps? We can reinstall the flatpak version for you later. (y/n) > " -n 1 -r
+		printf "\n"
+		if [[ $REPLY =~ ^[Yy]$ ]]; then
+			if [ -x "$(command -v snap)" ]; then
+				packageToRemove snapd
+				if [[ "$(cat /etc/*-release)" =~ Ubuntu ]]; then
+					sudo apt-mark hold snapd
+				fi
+				if [ ! -x "$(command -v snap)" ]; then
+					printf "\n\n%bSUCCESS! SNAPD HAS BEEN UNINSTALLED %b\n\n" "$green" "$white"
+				fi
+				read -rp "Press enter to continue..."
+			else
+				printf "\n%bSnapd%b does not seem to be installed.\n\n" "$yellow" "$white"
+			fi
+		fi
+		read -rp "Press enter to continue..."
+		;;
 	# If the selection is invalid
 	*)
         printf "ERROR... [Invalid Selection: '%s'] \n\n" "$selection"
