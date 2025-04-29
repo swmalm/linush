@@ -160,11 +160,33 @@ while true; do
 	# Network Info
     "ni")
 		clear
+		sysman_logo
+		printf "%b	 NETWORK INFORMATION		%b\n\n" "$yellow" "$white"
+		printf "%bHostname: %b%b\n\n" "$blue" "$white" "$(hostname)"
+		for interfaces in $(ip -br addr show | grep -v 'lo' | awk '{print $1}'); do # Loops each interface and grabs ips, mac and status with checks for up/down and not found.
+			printf "%bInterface: %b%b\n" "$green" "$white" "$interfaces"
+			if [[ "$(ip addr show "$interfaces" | grep 'inet' | grep -v ":" | awk '{print $2}')" ]];then
+				printf "%bIP Address:%b $(ip addr show "$interfaces" | grep 'inet' | grep -v ":" | awk '{print $2}' | cut -d "/" -f 1)\n" "$green" "$white"
+			else
+				printf "%bIP Address:%b <Not Found>%b\n" "$green" "$red" "$white"
+			fi
+			if [[ "$(ip r | grep default | grep "$interfaces" | awk '{print $3}')" ]];then
+				printf "%bGateway:%b $(ip r | grep default | grep "$interfaces" | awk '{print $3}')\n" "$green" "$white"
+			else
+				printf "%bGateway:%b <Not Found>%b\n" "$green" "$red" "$white"
+			fi
+			printf "%bMAC:%b $(ip addr show "$interfaces" | grep 'link/' | awk '{print $2}')\n" "$green" "$white"
+			if [[ "$(ip link show "$interfaces" | awk '{print $9}')" == "UP" ]];then
+				printf "Status: %b$(ip link show "$interfaces" | awk '{print $9}')%b\n\n" "$green" "$white"
+			else
+				printf "Status: %b$(ip link show "$interfaces" | awk '{print $9}')%b\n\n" "$red" "$white"
+			fi
+		done
         read -rp "Press enter to continue..."
         ;;
 
 	# Exit program
-    "ex")
+    "ex"|"exit")
 		clear
         printf "Quitting...";
         exit 0
@@ -173,90 +195,609 @@ while true; do
 	# Create user
 	"ua")
 		clear
+		sysman_logo
+		printf "%b	   CREATE NEW USER		%b\n\n" "$green" "$white"
+		read -rp "Enter the username: " usern
+
+		if ! echo "$usern" | grep '^[a-zA-Z]*$' > /dev/null; then
+			printf "%bERROR: USERNAME CAN NOT CONTAIN SPACES OR NUMBERS.%b" "$red" "$white"
+		else
+			read -rsp "Enter the password: " passw
+			printf "\n"
+			read -rsp "Enter the password again: " passw_check
+			printf "\n"
+			if [ "$passw" != "$passw_check" ];then
+				printf "\n%bERROR: NOT MATCHING PASSWORDS!%b\n\n" "$red" "$white"
+			else
+				sudo useradd -m "$usern" -g users -s /bin/bash
+				echo "$usern:$passw" | sudo chpasswd
+				printf "\n%bUser%b: %b'%b'%b was created successfully!\n\n" "$green" "$white" "$blue" "$usern" "$white"  
+			fi
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# Lists all users, not including system users
 	"ul")
 		clear
+		sysman_logo
+		printf "%b	   	USERS		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
 		read -rp "Press enter to continue..."
 		;;
 
 	# View user properties
 	"uv")
 		clear
+		sysman_logo
+		printf "%b	   USER PROPERTIES		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		printf "\n"
+		if id "$usern" > /dev/null;then
+			printf "User ID: %b$(grep -w "$usern" /etc/passwd | awk -F ":" '{print $3}')%b\n" "$yellow" "$white"
+			printf "Group ID: %b$(grep -w "$usern" /etc/passwd | awk -F ":" '{print $4}')%b\n" "$yellow" "$white"
+			printf "Comment: %b$(grep -w "$usern" /etc/passwd | awk -F ":" '{print $5}')%b\n" "$yellow" "$white"
+			printf "Home Directory: %b$(grep -w "$usern" /etc/passwd | awk -F ":" '{print $6}')%b\n" "$yellow" "$white"
+			printf "Shell Directory: %b$(grep -w "$usern" /etc/passwd| awk -F ":" '{print $7}')%b\n" "$yellow" "$white"
+			printf "Groups:%b$(groups "$usern" | awk -F ":" '{print $2}')%b\n\n" "$yellow" "$white"
+		else
+			printf "%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Delete user
 	"ud")
 		clear
+		sysman_logo
+		printf "%b	    DELETE USER		%b\n\n" "$red" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then # Checks if user exists and output goes to null
+			printf "\n"
+			read -p "Are you sure you want to delete the user ""$usern""? (y/n) > " -n 1 -r
+			printf "\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then 
+				sudo userdel --remove "$usern" 2>/dev/null
+				printf "\n%bUser%b: '%b' %bdeleted successfully!%b\n\n" "$green" "$white" "$usern" "$green" "$white"
+			else
+				printf "\n%bUser%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Modify user properties
 	"um")
 		clear
+		sysman_logo
+		printf "%b	    USER MODIFICATION		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then
+			printf "%b%b%b$(id -u "$usern")" "$green" "\nUser ID: " "$white"
+			printf "%b%b%b$(id -g "$usern")" "$green" "\nGroup ID: " "$white"
+			printf "%b%b%b$(grep -w "$usern" /etc/passwd| awk -F ":" '{print $5}')" "$green" "\nComment: " "$white"
+			printf "%b%b%b$(grep -w "$usern" /etc/passwd| awk -F ":" '{print $6}')" "$green" "\nHome Directory: " "$white"
+			printf "%b%b%b$(grep -w "$usern" /etc/passwd| awk -F ":" '{print $7}')" "$green" "\nShell Directory: " "$white"
+			printf "%b%b%b$(groups "$usern" | awk -F ":" '{print $2}')" "$green" "\nGroups:" "$white"
+			printf "\n\n"
+			printf "What property would you like to modify?\n\n"
+			printf  "%bPASSWORD%b | %bUSERNAME%b | %bGROUP%b | %bUSERID%b | %bGROUPID%b | %bCOMMENT%b | %bHOME%b | %bSHELL%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			read -rp "> " modifier
+			printf "\n"
+			case "$modifier" in 
+				"password" | "PASSWORD")
+					sudo passwd "$usern"
+					;;
+				"username" | "USERNAME")
+					printf "Current username: %b%b%b\n\n" "$yellow" "$usern" "$white"
+					read -rp "Enter new username: " new_usern
+					printf "\n"
+					read -p "Are you sure you want to change the username to '$new_usern'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -l "$new_usern" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW USERNAME: %b'%b'\n\n" "$green" "$white" "$new_usern"
+						else
+							printf "\n\n%bERROR: USERNAME %b'%b'%b WAS NOT CHANGED, TRY ANOTHER USERNAME!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: USERNAME %b'%b'%b WAS NOT CHANGED!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white"
+					fi
+					;;
+				"group" | "GROUP")
+					printf "Current default group: %b$(id -gn "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new default group: " new_grp
+					printf "\n"
+					read -p "Are you sure you want to change the primary group to '$new_grp'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -g "$new_grp" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW DEFAULT GROUP: %b'%b'\n\n" "$green" "$white" "$new_grp"
+						else
+							printf "\n\n%bERROR: DEFAULT GROUP WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$new_grp" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: DEFAULT GROUP WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$new_grp" "$yellow" "$white"
+					fi
+					;;
+				"userid" | "USERID")
+					printf "Current User ID: %b$(id -u "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new user id: " new_uid
+					printf "\n"
+					read -p "Are you sure you want to change the user id to '$new_uid'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -u "$new_uid" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW USER ID: %b'%b'\n\n" "$green" "$white" "$new_uid"
+						else
+							printf "\n\n%bERROR: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_uid" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: USER ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_uid" "$yellow" "$white"
+					fi
+					;;
+				"groupid" | "GROUPID")
+					printf "Current Group ID: %b$(id -g "$usern")%b\n\n" "$yellow" "$white"
+					read -rp "Enter new group id: " new_gid
+					printf "\n"
+					read -p "Are you sure you want to change the group id to '$new_gid'? (y/n) > " -n 1 -r
+					printf "\n"
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -g "$new_gid" "$usern"; then
+							printf "\n%bSUCCESS! NEW GROUP ID: %b'%b'\n\n" "$green" "$white" "$new_gid"
+						else
+							printf "\n%bERROR: GROUP ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_gid" "$red" "$white"
+						fi
+					else
+						printf "\n%bINFO: GROUP ID FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_gid" "$yellow" "$white"
+					fi
+					;;
+				"comment" | "COMMENT")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $5}')" "$green" "Current Comment: " "$white"
+					printf "\n\n"
+					read -rp "Enter new comment: " new_com
+					printf "\n"
+					read -p "Are you sure you want to change the comment to '$new_com'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -c "$new_com" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW COMMENT: %b'%b'\n\n" "$green" "$white" "$new_com"
+						else
+							printf "\n\n%bERROR: COMMENT FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_com" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: COMMENT FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_com" "$yellow" "$white"
+					fi
+					;;
+				"home" | "HOME")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $6}')" "$green" "Current Home Directory: " "$white"
+					printf "n\n"
+					read -rp "Enter new home directory: /home/" new_home
+					printf "\n"
+					read -p "Are you sure you want to change the home directory to '/home/$new_home'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo mkdir "/home/$new_home" && sudo usermod -d "/home/$new_home" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW HOME DIRECTORY: %b'/home/%b'\n\n" "$green" "$white" "$new_home"
+						else
+							printf "\n\n%bERROR: HOME DIRECTORY FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_home" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: HOME DIRECTORY FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_home" "$yellow" "$white"
+					fi
+					;;
+				"shell" | "SHELL")
+					printf "%b%b%b$(grep -w "^$usern" /etc/passwd| awk -F ":" '{print $7}')" "$green" "Current Shell Directory: " "$white"
+					read -rp "Enter new shell: /bin/" new_sh
+					printf "\n"
+					read -p "Are you sure you want to change the shell to '/bin/$new_sh'? (y/n) > " -n 1 -r
+					if [[ $REPLY =~ ^[Yy]$ ]]; then
+						if sudo usermod -s "/bin/$new_sh" "$usern"; then
+							printf "\n\n%bSUCCESS! NEW SHELL: %b'/bin/%b'\n\n" "$green" "$white" "$new_sh"
+						else
+							printf "\n\n%bERROR: SHELL FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$red" "$white" "$usern" "$red" "$white" "$new_sh" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bINFO: SHELL FOR %b'%b'%b WAS NOT CHANGED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$new_sh" "$yellow" "$white"
+					fi
+					;;
+				*)
+				    printf "%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$modifier"
+					;;
+			esac
+		else
+			printf "\n%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Create group
 	"ga")
 		clear
+		sysman_logo
+		printf "%b	    CREATE GROUP		%b\n\n" "$yellow" "$white"
+		read -rp "Enter name of new group: " group
+		if [[ ! "$group" = *" "* ]]; then
+			groups=$(getent group "$group" | cut -d ":" -f 1)
+			if [[ "$groups" == "$group" ]]; then
+				printf "\n%bERROR: GROUP %b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			else
+				printf "\n%bCreating group%b: '%b'\n\n" "$green" "$white" "$group"
+				read -p "Is this correct? (y/n) > " -n 1 -r
+				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					sudo groupadd "$group" 2>/dev/null
+					printf "\n%bGroup%b: '%b' %bwas created successfully!%b\n\n" "$green" "$white" "$group" "$green" "$white"
+				else
+					printf "\n%bGroup%b: '%b' %bwas not created!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+				fi
+			fi
+		else
+			printf "\n%bERROR: GROUP NAME %b'%b'%b HAS SPACES!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Lists all user groups
 	"gl")
 		clear
+		sysman_logo
+		printf "%b		GROUPS		%b\n\n" "$green" "$white"
+		printf "Groups:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" && $1 != "nogroup" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
 		read -rp "Press enter to continue..."
 		;;
 
 	# View specifed group
 	"gv")
 		clear
+		sysman_logo
+		printf "%b	    GROUP VIEW		%b\n\n" "$green" "$white"
+		printf "Groups:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" && $1 != "nogroup" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
+		read -rp "Enter group: " group
+		if ! getent group "$group" > /dev/null; then
+			printf "%bGroup '%s' not found.%b\n" "$red" "$group" "$white"
+		else
+			group_info=$(getent group "$group")
+			IFS=':' read -r group group_pw group_gid group_members <<< "$group_info"
+
+			printf "\nName: %b%s%b\n" "$blue" "$group" "$white"
+			printf "Password (x = empty): %b%s%b\n" "$blue" "$group_pw" "$white"
+			printf "GID: %b%s%b\n" "$blue" "$group_gid" "$white"
+			printf "Members: %b%s%b\n" "$blue" "$group_members" "$white"
+			
+			num_members=$(getent group "$group" | awk -F '[,:]' '{ print NF - 3 }' | sort -k2,2n)
+			printf "Size (Members count): %b%s%b\n\n" "$blue" "$num_members" "$white"
+		fi
+		printf ""
 		read -rp "Press enter to continue..."
 		;;
 	
 	# Add/Remove user from group
 	"gm")
 		clear
+		sysman_logo
+		printf "%b	    ADD/REMOVE USER FROM GROUP		%b\n\n" "$green" "$white"
+		printf "Users:\n"
+		printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" {print $1}' /etc/passwd)%b \n\n" "$blue" "$white"
+		read -rp "Enter user: " usern
+		if id "$usern" > /dev/null 2>&1; then
+			clear
+			sysman_logo
+			printf "%b	    ADD/REMOVE USER FROM GROUP		%b\n\n" "$green" "$white"
+			printf "Groups:\n"
+			printf "%b$(awk -F: '$3 >= 1000 && $1 != "nobody" && $1 != "autologin" && $1 != "nogroup" {print $1}' /etc/group)%b \n\n" "$blue" "$white"
+			read -rp "Enter group: " group
+			if getent group "$group" > /dev/null 2>&1; then
+				printf "User selected: %b" "$usern"
+				printf "Group selected: %b" "$group"
+				printf "Do you want to (add) or (remove) %b from %b?" "$usern" "$group"
+				read -rp "> " add_or_remove
+				printf "\n"
+				if [[ "$add_or_remove" == "add" ]]; then
+					if usermod -aG "$usern" "$group"; then
+						printf "\n\n%bSUCCESS! USER: %b'%b'%b HAS BEEN ADDED TO %b'%b'\n\n" "$green" "$white" "$usern" "$green" "$group" "$white"
+					else
+						printf "\n\n%bINFO: USER %b'%b'%b WAS NOT ADDED TO %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$group" "$yellow" "$white"
+					fi
+				elif [[ "$add_or_remove" == "remove" ]]; then
+					if gpasswd -d "$usern" "$group"; then
+						printf "\n\n%bSUCCESS! USER: %b'%b'%b HAS BEEN REMOVED FROM %b'%b'\n\n" "$green" "$white" "$usern" "$green" "$group" "$white"
+					else
+						printf "\n\n%bINFO: USER %b'%b'%b WAS NOT REMOVED FROM %b'%b'%b!%b\n\n" "$yellow" "$white" "$usern" "$yellow" "$white" "$group" "$yellow" "$white"
+					fi
+				else
+					printf "ERROR... [Invalid Selection: '%s'] \n\n" "$add_or_remove"		
+				fi
+			else
+				printf "%bERROR: GROUP %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			fi
+		else
+			printf "%bERROR: USER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$usern" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 	
 	# Delete group
 	"gd")
 		clear
+		sysman_logo
+		printf "%b	    DELETE GROUP		%b\n\n" "$yellow" "$white"
+		read -rp "Enter name of the group: " group
+		groups=$(getent group "$group" | cut -d ":" -f 1)
+		if [[ "$groups" == "$group" ]]; then
+			printf "\n%bDeleting group%b: '%b'\n\n" "$green" "$white" "$group"
+			read -p "Are you sure? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo delgroup "$group" 2>/dev/null
+				printf "\n\n%bGroup%b: '%b' %bwas deleted successfully!%b\n\n" "$green" "$white" "$group" "$green" "$white"
+			else
+				printf "\n\n%bGroup%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: GROUP %b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$group" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 	
 	# Create folder
 	"fa")
 		clear
+		sysman_logo
+		printf "%b	   CREATE NEW FOLDER		%b\n\n" "$green" "$white"
+		read -rp "Enter folder name: " folder
+		printf "\n"
+		read -rp "Enter folder's parent directory in absolute path (i.e. /home/../../file.jpg): " folder_path
+		folder_path="${folder_path//\'/}"
+		if [[ -d "$folder_path" ]]; then
+			if [[ ! -d "$folder_path/$folder" ]]; then
+				mkdir "$folder_path/$folder"
+				printf "\n%bSUCCESS! Folder %b'%b'%b was created successfully!%b\n\n" "$green" "$white" "$folder" "$green" "$white"
+			else
+				printf "\n%bERROR: FOLDER%b'%b'%b ALREADY EXISTS!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: PARENT DIRECTORY %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder_path" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# View content of folder
 	"fl")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER CONTENTS		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path (i.e. /home/../../file.jpg): " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nPATH: %b%s%b\n\n" "$blue" "$folder" "$white"
+			printf "%bContents of folder:%b\n" "$red" "$white"
+			for file in "$folder"/*; do
+				if [[ -d "$file" ]]; then
+					printf "%b%s%b\n" "$green" "$(basename "$file")" "$white"
+				elif [[ -f "$file" ]]; then
+					printf "%b%s%b\n" "$yellow" "$(basename "$file")" "$white"
+				else
+					printf "%b%s%b\n" "$red" "$(basename "$file")" "$white"
+				fi
+			done
+			printf "\n"
+		else
+			printf "\n%bERROR: FOLDER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# View folder properties
 	"fv")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER PROPERTIES		%b\n\n" "$green" "$white"
+		read -rp "Enter folder's absolute path (i.e. /home/../../file.jpg): " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nPATH: %b%s%b\n\n" "$blue" "$folder" "$white"
+			printf "Owner: %b%s%b\n" "$blue" "$(stat -c '%U' "$folder")" "$white"
+			printf "Group: %b%s%b\n\n" "$blue" "$(stat -c '%G' "$folder")" "$white"
+			printf "Permissions: %b%s%b\n" "$blue" "$(stat -c '%A' "$folder")" "$white"
+			perm_string="$(stat -c '%a' "$folder")"
+			octal="${perm_string: -3}"
+			perm_list=""
+			for (( i = 1; i <= 3; i++ )); do
+				perm_number="${octal:i-1:1}"
+				case $i in
+					1) perm_list+="Owner: ";;
+					2) perm_list+="Group: ";;
+					3) perm_list+="Others: ";;
+				esac
+				case $perm_number in
+					"7") perm_list+="Read, Write & Execute\n";;
+					"6") perm_list+="Read & Write\n";;
+					"5") perm_list+="Read & Execute\n";;        
+					"4") perm_list+="Read\n";;
+					"3") perm_list+="Write & Execute\n";;
+					"2") perm_list+="Write\n";;
+					"1") perm_list+="Execute\n";;
+					"0") perm_list+="No permissions\n";;
+				esac
+			done
+			printf "%b" "$perm_list"
+			perm_sgid="$(stat -c '%A' "$folder" | cut -c 10)"
+			perms_stick="$(stat -c '%A' "$folder" | cut -c 7)"
+			if [[ "$perm_sgid" == "s" ]]; then
+				printf "SGID: %bYES%b\n" "$green" "$white"
+			else
+				printf "SGID: %bNO%b\n" "$red" "$white"
+			fi
+			if [[ "$perms_stick" == "t" ]]; then
+				printf "Sticky bit: %bYES%b\n" "$green" "$white"
+			else
+				printf "Sticky bit: %bNO%b\n" "$red" "$white"
+			fi
+			printf "\nCreated: %b%s%b\n" "$blue" "$(stat -c '%w' "$folder")" "$white"
+			printf "Last modified: %b%s%b\n" "$blue" "$(stat -c '%y' "$folder")" "$white"
+			printf "Last accessed: %b%s%b\n\n" "$blue" "$(stat -c '%x' "$folder")" "$white"
+		else
+			printf "\n%bERROR: FOLDER %b%b%b WAS NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
 	# Modify folder properties
 	"fm")
 		clear
+		sysman_logo
+		printf "%b	   FOLDER MODIFICATION		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path (i.e. /home/../../file.jpg): " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nWhich property would you like to modify?\n\n"
+			printf  "%bOWNER%b | %bGROUP%b | %bPERMISSIONS%b | %bSTICKY BIT%b | %bSETGID%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			read -rp "> " modifier
+			case $modifier in
+			"owner"|"OWNER")
+				printf "\nCurrent owner: %b%s%b\n\n" "$yellow" "$(stat -c '%U' "$folder")" "$white"
+				read -rp "Enter new owner: " new_owner
+				printf "\n"
+				read -p "Are you sure you want to change the owner to '$new_owner'? (y/n) > " -n 1 -r
+				printf "\n\n"
+				chown -v "$new_owner" "$folder"
+				printf "\n"
+				;;
+			"group"|"GROUP")
+				printf "\nCurrent group: %b%s%b\n\n" "$yellow" "$(stat -c '%G' "$folder")" "$white"
+				read -rp "Enter new group: " new_group
+				printf "\n"
+				read -p "Are you sure you want to change the group to '$new_group'? (y/n) > " -n 1 -r
+				printf "\n\n"
+				chgrp -v "$new_group" "$folder"
+				printf "\n"
+				;;
+			
+			"permissions"|"PERMISSIONS")
+				printf "\nWhat permissions would you like to change?\n\n"
+				printf "%b(R)ead%b | %b(W)rite%b | %bE(X)ecute%b | %b(A)ll%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+				read -rp "> " -n 1 perm_select	
+				perm_select="${perm_select,,}"
+				if [[ $perm_select == "a" || $perm_select == "A" ]]; then
+					printf "\n\nWho's permissions would you like to change?\n"
+					printf "\n%b(U)ser Owner%b | %b(G)roup%b | %b(O)ther%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+					read -rp "> " -n 1 who_select
+					who_select="${who_select,,}"
+					if [[ $who_select == "u" || $who_select == "U" ]]; then
+						if chmod u+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! OWNER PERMISSIONS ADDED TO: %b'%b\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: OWNER PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					elif [[ $who_select == "g" || $who_select == "G" ]]; then
+						if chmod g+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! GROUP PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: GROUP PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					elif [[ $who_select == "o" || $who_select == "O" ]]; then
+						if chmod o+rwx "$folder"; then
+							printf "\n\n%bSUCCESS! OTHERS PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder"
+						else
+							printf "\n\n%bERROR: OTHERS PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+						fi
+					else
+						printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$who_select"
+					fi
+				elif [[ $perm_select == "r" || $perm_select == "R" || $perm_select == "w" || $perm_select == "W" || $perm_select == "x" || $perm_select == "X" ]]; then
+					printf "\n\nWho's permissions do you want to change?\n\n"
+					printf "%b(U)ser Owner%b | %b(G)roup%b | %b(O)ther%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+					read -rp "> " -n 1 who_select
+					who_select="${who_select,,}"
+					printf "\n\nDo you want to (add) or (remove) permission: '%b'?\n\n" "$perm_select"
+					read -rp "> " add_or_remove
+					add_or_remove="${add_or_remove,,}"
+					if [[ $add_or_remove == "add" ]]; then
+						if chmod "$who_select"+"$perm_select" "$folder"; then
+							printf "\n%bSUCCESS! %b'%b'%b PERMISSIONS ADDED TO: %b'%b'\n\n" "$green" "$white" "$folder" "$green" "$white" "$perm_select"
+						else
+							printf "\n%bERROR: %b'%b'%b PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white" "$perm_select" "$red" "$white"
+						fi
+					elif [[ $add_or_remove == "remove" ]]; then
+						if chmod "$who_select"-"$perm_select" "$folder"; then
+							printf "\n%bSUCCESS! %b'%b'%b PERMISSIONS REMOVED FROM: %b'%b'\n\n" "$green" "$white" "$folder" "$green" "$white" "$perm_select"
+						else
+							printf "\n%bERROR: %b'%b'%b PERMISSIONS %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white" "$perm_select" "$red" "$white"
+						fi
+					else
+						printf "\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$add_or_remove"
+					fi
+				else
+					printf "\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$perm_select"
+				fi
+				;;
+			"sticky bit"|"STICKY BIT")
+				printf "\nSticky bit: %b%s%b\n\n" "$yellow" "$(stat -c '%A' "$folder" | grep -q '[tT]$' && echo enabled || echo disabled)" "$white"
+				read -p "Do you want to enable or disable the sticky bit? (e/d) > " -n 1 -r
+				if [[ $REPLY =~ ^[Ee]$ ]]; then
+					if chmod +t "$folder"; then
+						printf "\n\n%bSUCCESS! STICKY BIT ENABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: STICKY BIT %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				elif [[ $REPLY =~ ^[Dd]$ ]];then
+					if chmod -t "$folder";then
+						printf "\n\n%bSUCCESS! STICKY BIT DISABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: STICKY BIT %b'%b'%b NOT CHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				else
+					printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$REPLY"
+				fi
+				;;
+			"setgid"|"SETGID")
+				printf "\nSGID bit: %b%s%b\n\n" "$yellow" "$( [[ $(stat -c '%A' "$folder") =~ [sS] ]] && echo enabled || echo disabled )" "$white"
+				read -p "Do you want to enable or disable the setgid? (e/d) > " -n 1 -r
+				if [[ $REPLY =~ ^[Ee]$ ]]; then
+					if chmod g+s "$folder"; then
+						printf "\n\n%bSUCCESS! SETGID ENABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: SETGID %b'%b'%b WAS LEFT UNCHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				elif [[ $REPLY =~ ^[Dd]$ ]]; then
+					if chmod g-s "$folder"; then
+						printf "\n\n%bSUCCESS! SETGID DISABLED: %b'%b'\n\n" "$green" "$white" "$folder"
+					else
+						printf "\n\n%bERROR: SETGID %b'%b'%b WAS LEFT UNCHANGED!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+					fi
+				else
+					printf "\n\n%bERROR...%b [Invalid Selection: '%s'] \n\n" "$red" "$white" "$REPLY"
+				fi
+				;;
+			esac
+		fi
 		read -rp "Press enter to continue..."
 		;;
 		
 	# Delete folder
 	"fd")
 		clear
+		sysman_logo
+		printf "%b	    DELETE FOLDER		%b\n\n" "$yellow" "$white"
+		read -rp "Enter folder's absolute path (i.e. /home/../../file.jpg): " folder
+		folder="${folder//\'/}"
+		if [[ -d "$folder" ]]; then
+			printf "\nDeleting folder: %b'%b'%b\n\n" "$green" "$folder" "$white"
+			read -p "Are you sure? (y/n) > " -n 1 -r
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				sudo rm -rf "$folder"
+				printf "\n\n%bFolder%b: '%b' %bwas deleted successfully!%b\n\n" "$green" "$white" "$folder" "$green" "$white"
+			else
+				printf "\n\n%bFolder%b: '%b' %bwas not deleted!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+			fi
+		else
+			printf "\n%bERROR: FOLDER %b'%b'%b NOT FOUND!%b\n\n" "$red" "$white" "$folder" "$red" "$white"
+		fi
 		read -rp "Press enter to continue..."
 		;;
 
@@ -500,7 +1041,7 @@ while true; do
 				if lspci | grep -q "VGA" | grep -q "NVIDIA" && grep -q "Arch" /etc/*-release; then
 					gpu_model=$(lspci | grep VGA | grep NVIDIA | sed -n 's/.*Corporation\s*\([A-Za-z][A-Za-z]\).*/\1/p')
 					if [[ "$gpu_model" =~ (TU|GA|AD)$ ]]; then
-						cpu_model=$(cat /proc/cpuinfo | grep "model name" | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2)
+						cpu_model=$(grep "model name" /proc/cpuinfo | head -n 1 | cut -d ':' -f 2 | sed -E 's/.*i[3579]-([0-9]{4}).*/\1/' | cut -c1-2) # Removed useless cat
 						kernel=$(pacman -Q | grep -E '^linux(| |-lts)[^-headers]' | cut -d ' ' -f 1)
 						header="${kernel}-headers"
 						if [[ "$kernel" = "linux" ]]; then
@@ -558,6 +1099,29 @@ while true; do
 
 	"firm")
 		clear
+		sysman_logo
+		printf "%b	 FIRMWARE UPDATER		%b\n\n" "$green" "$white"
+		printf "%bfwupd%b is a simple daemon to allow session software to update device firmware on your local machine.\n\n" "$yellow" "$white"
+		if mokutil --sb-state | grep -q 'SecureBoot enabled'; then
+			printf "SecureBoot is enabled, updating firmware within Linush on SecureBoot-enabled systems is not recommended.\n\n"
+		else
+			read -p "Do you want to check for system firmware updates and install them if found? (y/n) > " -n 1 -r
+			printf "\n\n"
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				if [ -x "$(command -v fwupdmgr)" ];then
+					printf "%bfwupd%b is already installed...\n\n" "$yellow" "$white"
+				else
+					packageToInstall fwupd
+				fi
+				fwupdmgr refresh --force
+				fwupdmgr get-updates
+				fwupdmgr update
+				printf "\n"
+			else
+				printf "%bNot updating firmware...%b" "$red" "$white"
+			fi
+		fi
+		read -rp "Press enter to continue..."
 		;;
 
 	# If the selection is invalid
