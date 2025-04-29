@@ -1097,6 +1097,24 @@ while true; do
 		read -rp "Press enter to continue..."
 		;;
 
+	"boot")
+		clear
+		sysman_logo
+		printf "%b	SYSTEMD BOOT OPTIMIZER		%b\n\n" "$green" "$white"
+		printf "%bsystemd-analyze%b is a debugging tool that can be used to determine system boot-up performance.\n\n" "$yellow" "$white"
+		if [ -x "$(command -v systemd-analyze)" ]; then
+			printf "TOP 5 SLOWEST SERVICES: \n"
+			printf "%b\n\n" "$(systemd-analyze blame | head -n 5)" 
+			printf "%bPresets that Linush can manage:%b\n" "$green" "$white"
+			printf  "%bNETWORK MANAGER%b | %bAPT-DAILY%b | %bSNAPD%b | %bPLYMOUTH%b | %bBLUETOOTH%b | %bUDISKS%b | %bLVM2%b | %bCUPS%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			read -rp "Enter preset or (q): " preset
+			printf "\n\n%b" "$preset"
+		else
+			printf "\n\n%bINFO: SYSTEM MAY NOT BE USING SYSTEMD!%b\n\n" "$yellow" "$white"
+		fi
+		read -rp "Press enter to continue..."
+		;;
+
 	"firm")
 		clear
 		sysman_logo
