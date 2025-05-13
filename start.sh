@@ -849,12 +849,25 @@ while true; do
 		printf "Goverlay: MangoHud configuration tool\n"
 		printf "Lutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc.\n"
 		printf "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming\n"
-		printf "Gear Lever: Utility for handling .appimages like Heroic Games Launcher\n\n"
+		printf "Gear Lever: Utility for handling .appimages like Heroic Games Launcher\n"
+		printf "Gamemode: CPU Optimization daemon, can be enabled by using 'gamemoderun %command%' launch option.\n\n"
 		read -rp "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		printf "\n"
 		if [ -x "$(command -v flatpak)" ];then
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
-				packageToInstall steam gamescope mangohud goverlay lutris curl
+				packageToInstall steam gamescope mangohud goverlay lutris curl gamemode
+				if grep -q gamemode /etc/group; then
+					sudo usermod -aG gamemode $(whoami)
+				else
+					printf "%bERROR: Gamemode was not properly installed.\n\n%b" "$red" "$white"
+				fi
+				if [ ! -e /etc/gamemode.ini ]; then
+					printf "[general]\nrenice=10" | sudo tee -a /etc/gamemode.ini > /dev/null
+				elif grep -q "renice=" /etc/gamemode.ini; then
+    				sudo sed -i '/^renice=/c\renice=10' /etc/gamemode.ini
+				else
+    				printf "\n[general]\nrenice=10" | sudo tee -a /etc/gamemode.ini > /dev/null
+				fi
 				mkdir -p "$HOME/AppImages"
 				curl -s https://api.github.com/repos/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep browser_download_url | grep '.AppImage' | cut -d '"' -f 4 | xargs curl -L -o "$HOME/AppImages/heroic_games_launcher.appimage"
 				sudo flatpak install it.mijorus.gearlever -y
