@@ -850,14 +850,14 @@ while true; do
 		printf "Lutris: Alternative game launcher with integration for platforms like EA App, Ubisoft Connect, Humble Bundle, etc.\n"
 		printf "Heroic Games Launcher: Alternative game launcher with very good integration for Epic Games Launcher, GOG Galaxy and Amazon Prime Gaming\n"
 		printf "Gear Lever: Utility for handling .appimages like Heroic Games Launcher\n"
-		printf "Gamemode: CPU Optimization daemon, can be enabled by using 'gamemoderun %command%' launch option.\n\n"
+		printf "Gamemode: CPU Optimization daemon for gaming\n\n"
 		read -rp "Do you want to install all the recommended packages? (y/n) > " -n 1 -r
 		printf "\n"
 		if [ -x "$(command -v flatpak)" ];then
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				packageToInstall steam gamescope mangohud goverlay lutris curl gamemode
 				if grep -q gamemode /etc/group; then
-					sudo usermod -aG gamemode $(whoami)
+					sudo usermod -aG gamemode "$(whoami)!"
 				else
 					printf "%bERROR: Gamemode was not properly installed.\n\n%b" "$red" "$white"
 				fi
@@ -897,6 +897,8 @@ while true; do
 			if [[ $REPLY =~ ^[Yy]$ ]]; then # Reply is default variable name
 				sudo dnf install "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 				sudo dnf update @core
+				sudo dnf swap ffmpeg-free ffmpeg --allowerasing
+				sudo dnf update @multimedia --setopt="install_weak_deps=False" --exclude=PackageKit-gstreamer-plugin
 			fi
 			;;
 		"nvi")
