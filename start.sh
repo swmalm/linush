@@ -98,7 +98,9 @@ print_help(){
 
     printf "%bSYSTEM%b\n" "$green" "$white"
     printf "%bfirm%b - Firmware\n" "$red" "$white"
-    printf "%bflat%b - Flatpak\n\n" "$red" "$white"
+    printf "%bflat%b - Flatpak\n" "$red" "$white"
+	printf "%bboot%b - Boot Analysis\n\n" "$red" "$white"
+
 
     printf "%bex%b - Exit the program\n" "$yellow" "$white"
 }
@@ -1100,15 +1102,37 @@ while true; do
 	"boot")
 		clear
 		sysman_logo
-		printf "%b	SYSTEMD BOOT OPTIMIZER		%b\n\n" "$green" "$white"
-		printf "%bsystemd-analyze%b is a debugging tool that can be used to determine system boot-up performance.\n\n" "$yellow" "$white"
+		printf "%b	SYSTEMD BOOT VIEWER		%b\n\n" "$green" "$white"
+		printf "%bsystemd-analyze%b is a tool that can be used to analyze system boot-up performance.\n\n" "$yellow" "$white"
 		if [ -x "$(command -v systemd-analyze)" ]; then
-			printf "TOP 5 SLOWEST SERVICES: \n"
-			printf "%b\n\n" "$(systemd-analyze blame | head -n 5)" 
-			printf "%bPresets that Linush can manage:%b\n" "$green" "$white"
-			printf  "%bNETWORK MANAGER%b | %bAPT-DAILY%b | %bSNAPD%b | %bPLYMOUTH%b | %bBLUETOOTH%b | %bUDISKS%b | %bLVM2%b | %bCUPS%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
+			printf "%bSLOWEST SERVICES:%b\n" "$red" "$white"
+			printf "%b\n\n" "$(systemd-analyze critical-chain)" 
+			printf "%bServices that Linush can explain:%b\n" "$green" "$white"
+			printf  "%b(NET)WORK MANAGER%b | %b(APP)ARMOR%b | %b(SNA)PD%b | %b(PLY)MOUTH%b | %b(DEV)-SD?%b\n\n" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white" "$yellow" "$white"
 			read -rp "Enter preset or (q): " preset
-			printf "\n\n%b" "$preset"
+			preset=$(printf "%b" "$preset" | tr '[:upper:]' '[:lower:]')
+			case "$preset" in
+			"net")
+				printf "\n%bNetworkManager%b can cause slow boot times if it's waiting for a network connection to become available during boot.\nSetting up a manual static IP configuration can help speed up this service as it won't have to wait for DHCP.\n\n" "$yellow" "$white"
+			;;
+			"app")
+				printf "\n%bapparmor%b is a security module in the Linux kernel that allow administrators to restrict programs to predefined security profiles.\nEnabling caching in '/etc/apparmor/parsec.conf' can help speed up boot times." "$yellow" "$white"
+			;;
+			"sna")
+				printf "\n%bsnapd.seeded%b is a service that administrates tasks with snap packages and has security benefits but we recommend not using snap packages at all.\nSwitching to exclusively using flatpaks as the sandboxed application format can be done with the 'snap' command in Linush.\n\n" "$yellow" "$white"
+			;;
+			"ply")
+				printf "\n%bplymouth-quit-wait%b is responsible for your boot-up splash screen and simply waits for all other boot-up processes to finish before unloading the splash screen.\nDisabling plymouth is not something that delays your boot process and can therefore be left alone.\n\n" "$yellow" "$white"
+			;;
+			"dev")
+				printf "\n%bdev-sd?%b is most likely one of your disks taking a while to initialize or mount. \nUnless you have a non-standard mounting configuration, there isn't much that can be done to speed this process up. \nChecking the health of the drive with SMART and making sure it has space available might help you diagnose any issues.\n\n" "$yellow" "$white"
+			;;
+			"q")
+				printf "\nExiting...\n\n"
+			;;
+			*)
+			;;
+			esac
 		else
 			printf "\n\n%bINFO: SYSTEM MAY NOT BE USING SYSTEMD!%b\n\n" "$yellow" "$white"
 		fi
